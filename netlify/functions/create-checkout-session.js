@@ -28,7 +28,7 @@ exports.handler = async (event) => {
       .eq('user_id', user_id)
       .single();
 
-    const siteUrl = process.env.SITE_URL || 'https://YOUR-SITE.netlify.app';
+    const siteUrl = process.env.SITE_URL || 'https://vocal-sherbet-5889b4.netlify.app';
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
