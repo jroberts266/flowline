@@ -9,8 +9,8 @@
 
 window.FLOWLINE_CONFIG = {
   // Supabase → Project Settings → API
-  SUPABASE_URL: "https://YOUR-PROJECT-REF.supabase.co",
-  SUPABASE_ANON_KEY: "YOUR-ANON-PUBLIC-KEY",
+  SUPABASE_URL: "https://atbyszhbjahuutokdcgv.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0YnlzemhiamFodXV0b2tkY2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5Njg4NDYsImV4cCI6MjEwMDU0NDg0Nn0.M19LsxTUC2PTRv3S7WZPxiBTM7tSWaU-4bNgHyiV-iA",
 
   // Stripe → Developers → API keys (the PUBLISHABLE key, not the secret one)
   STRIPE_PUBLISHABLE_KEY: "pk_live_or_pk_test_...",
