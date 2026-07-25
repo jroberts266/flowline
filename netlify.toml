@@ -2,6 +2,15 @@
   functions = "netlify/functions"
   publish = "."
 
+[build.environment]
+  # SUPABASE_URL and STRIPE_PRICE_ID are set as Netlify environment variables
+  # (for the serverless functions) but are also meant to appear publicly in
+  # flowline-config.js for the browser to read — neither is actually secret
+  # (the Supabase anon key + URL are designed for client-side use, and a
+  # Stripe Price ID is just an identifier, not a credential). Without this,
+  # Netlify's secret scanner flags them as leaked secrets and fails the build.
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,STRIPE_PRICE_ID"
+
 [functions]
   node_bundler = "esbuild"
 
