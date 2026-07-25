@@ -20,5 +20,5 @@ window.FLOWLINE_CONFIG = {
 
   // Where your serverless functions live once deployed, e.g.
   // "https://your-site.netlify.app/.netlify/functions"
-  FUNCTIONS_BASE_URL: "https://YOUR-SITE.netlify.app/.netlify/functions"
+  FUNCTIONS_BASE_URL: "https://vocal-sherbet-5889b4.netlify.app/.netlify/functions"
 };
