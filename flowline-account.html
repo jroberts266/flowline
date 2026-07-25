@@ -16,6 +16,7 @@
   .error-msg{ background:var(--accent-push-soft); color:var(--accent-push); border-radius:var(--radius); padding:8px 12px; font-size:12.5px; margin-bottom:12px; display:none; }
   .plan-badge{ display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding:4px 10px; border-radius:12px; }
   .plan-badge.active{ background:var(--accent-pull-soft); color:var(--accent-pull); }
+  .plan-badge.trial{ background:var(--accent-push-soft); color:var(--accent-push); }
   .plan-badge.none{ background:#F0F0EA; color:var(--ink-soft); }
   .saved-row{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--grid); font-size:13px; }
   .saved-row:last-child{ border-bottom:none; }
@@ -88,11 +89,24 @@ async function render(){
 
   const sub = await Flowline.getSubscription();
   const active = Flowline.isActive(sub);
+  const trialActive = Flowline.isTrialActive(sub);
+  const trialDays = Flowline.trialDaysLeft(sub);
+
+  let badgeClass = 'none', badgeText = 'Free trial ended';
+  let statusNote = 'Your 10-day free trial has ended. Subscribe to keep using the tools and to save your work.';
+  if (active){
+    badgeClass = 'active'; badgeText = 'Pro — active';
+    statusNote = 'You have full access to every tool and can save your work.';
+  } else if (trialActive){
+    badgeClass = 'trial'; badgeText = `Free trial — ${trialDays} day${trialDays===1?'':'s'} left`;
+    statusNote = 'You can use every tool during your trial. Saving to your account requires a Pro subscription.';
+  }
 
   app.innerHTML = `
     <div class="card">
       <h2>Signed in as ${esc(user.email)}</h2>
-      <span class="plan-badge ${active?'active':'none'}">${active ? 'Pro — active' : 'Free plan'}</span>
+      <span class="plan-badge ${badgeClass}">${badgeText}</span>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:10px 0 0;">${statusNote}</p>
       <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
         ${active
           ? `<button class="btn-ghost" id="btn-portal">Manage billing</button>`

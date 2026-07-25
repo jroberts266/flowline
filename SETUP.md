@@ -142,10 +142,44 @@ Pareto, Process Capability, OEE, Takt Time, Yamazumi, 5S Audit, Kanban, KPI
 Dashboard, and Hour-by-Hour Board. Each has a "Save to my account" button, a
 "My saved items" panel, and reopens correctly from the account page's list.
 
-**A decision you still need to make:** right now every tool is fully usable
-for free, and only *saving to an account* is behind sign-up (not even
-behind payment yet — any signed-in free user can save). If you want the
-paywall to actually restrict something, we should decide together what
-"Pro" gates — e.g. saving/loading at all, or unlimited saved items vs. a
-free cap, or exporting PDFs. Say the word and I'll wire `Flowline.isActive()`
-into whichever feature you want gated.
+## The paywall: free trial + Pro-only saving
+
+Here's exactly how access works now:
+
+| Status | Can use the tools? | Can save to account? |
+|---|---|---|
+| Not signed in | No — blocked with a "sign up free" screen | No |
+| Signed in, trial active (first 10 days) | **Yes, full access** | **No** — shown an upgrade prompt |
+| Signed in, trial ended, not subscribed | No — blocked with an "upgrade" screen | No |
+| Paying subscriber (any time) | Yes | Yes |
+
+The 10-day trial starts automatically the moment someone signs up — no
+payment info collected, no Stripe involvement at all for the trial itself.
+That's handled entirely by a Supabase database trigger that stamps
+`trial_ends_at` on the new account.
+
+**If you already ran the original `schema.sql` on a live Supabase project**,
+that trigger doesn't know about trials yet. Run **`migration-trial.sql`** in
+the Supabase SQL Editor once to add it — this also gives any existing test
+accounts (like the ones you've been using to debug Stripe) a fresh 10-day
+trial starting from when you run it. If you're setting up a brand new
+Supabase project instead, you don't need this — the updated `schema.sql`
+already includes everything.
+
+**One limitation worth understanding clearly:** the tool-usage gate is
+enforced client-side (in the browser), not server-side. It's a real product
+gate — casual visitors can't get past it — but it's not a hard security
+boundary, since someone with enough technical knowledge could disable it via
+browser dev tools. The part that *is* genuinely enforced server-side is
+saving: Supabase's row-level security policies check the real subscription
+status in the database no matter what the browser claims, so that part can't
+be bypassed the same way. This split (soft gate on usage, hard gate on data)
+is a normal and common pattern — it's the same tradeoff most free-trial
+products make, since a fully server-enforced view gate would require
+server-rendering every page instead of serving static HTML.
+
+**Also worth remembering before a real launch:** turn Supabase's "Confirm
+email" setting back on (we turned it off earlier purely to make testing
+easier) — as configured for testing, someone can sign up with a fake email
+and still get the full 10-day trial.
+
