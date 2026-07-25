@@ -1,0 +1,10 @@
+{
+  "name": "flowline-functions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serverless functions for Flowline's Stripe + Supabase subscription handling.",
+  "dependencies": {
+    "stripe": "^17.0.0",
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

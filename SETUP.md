@@ -1,0 +1,155 @@
+# Flowline — Path B setup guide (Supabase + Stripe)
+
+This connects accounts, saved data, and paid subscriptions to the site. All
+the code is already written; this guide is the part that needs *your*
+accounts and can't be done for you — creating the Supabase project, the
+Stripe product, and deploying with the right secret keys.
+
+Budget about 45–60 minutes the first time through. None of these steps
+require writing code — just filling in forms and pasting keys.
+
+---
+
+## 0. What you're connecting
+
+- **Supabase** — handles user accounts (sign up/in) and stores each user's
+  saved maps/reports in a real database.
+- **Stripe** — handles the actual subscription billing.
+- **Netlify** — hosts the site *and* runs three small serverless functions
+  that talk to Stripe on the site's behalf (the browser never touches your
+  Stripe secret key directly).
+
+---
+
+## 1. Create the Supabase project
+
+1. Go to [supabase.com](https://supabase.com) and create a free account/project.
+2. Once the project is ready, go to **Project Settings → API**. You'll need
+   two values from this page in a minute: the **Project URL** and the
+   **anon public key**.
+3. Go to **SQL Editor → New query**, paste in the entire contents of
+   `schema.sql` (included in this project), and click **Run**. This creates
+   the `subscriptions` and `saved_items` tables with the correct security
+   rules already applied.
+4. Go to **Authentication → Providers** and confirm **Email** is enabled
+   (it is by default). For a quick test you can also turn off "Confirm
+   email" under **Authentication → Settings** so you don't need a working
+   email inbox to test sign-up — turn it back on before real customers use it.
+
+---
+
+## 2. Create the Stripe product
+
+1. Go to [stripe.com](https://stripe.com) and create an account (test mode
+   is on by default — perfect for now, you'll flip to live mode later).
+2. Go to **Product catalog → Add product**. Give it a name (e.g. "Flowline
+   Pro"), set it as **Recurring**, pick your price and billing interval.
+3. Save it, then open the price you just created and copy its **Price ID**
+   (starts with `price_...`).
+4. Go to **Developers → API keys**. Copy the **Publishable key**
+   (`pk_test_...` or `pk_live_...`) and the **Secret key** (`sk_test_...` or
+   `sk_live_...`) — keep the secret key private, it never goes in a file
+   that gets uploaded to GitHub.
+5. Go to **Developers → Webhooks → Add endpoint**. You won't have the URL
+   until after deploying (step 4 below), so come back to this step once
+   your site is live — the endpoint URL will be:
+   `https://YOUR-SITE.netlify.app/.netlify/functions/stripe-webhook`
+   Subscribe it to these three events: `checkout.session.completed`,
+   `customer.subscription.updated`, `customer.subscription.deleted`.
+   After creating it, copy the **Signing secret** (`whsec_...`).
+
+---
+
+## 3. Fill in the public config file
+
+Open `flowline-config.js` and replace the placeholder values:
+
+```js
+window.FLOWLINE_CONFIG = {
+  SUPABASE_URL: "https://xxxxxxxx.supabase.co",       // from step 1.2
+  SUPABASE_ANON_KEY: "eyJhbGciOi...",                  // from step 1.2
+  STRIPE_PUBLISHABLE_KEY: "pk_test_...",               // from step 2.4
+  STRIPE_PRICE_ID: "price_...",                        // from step 2.3
+  FUNCTIONS_BASE_URL: "https://YOUR-SITE.netlify.app/.netlify/functions"
+};
+```
+
+This file is safe to commit and deploy — none of these values are secret.
+
+---
+
+## 4. Deploy to Netlify (not GitHub Pages, for this part)
+
+GitHub Pages can't run the serverless functions Stripe needs, so for Path B
+you'll deploy through **Netlify** instead — same idea as before, still free
+to start.
+
+1. Push the whole project folder to a GitHub repo (same as the earlier
+   GitHub Pages instructions).
+2. Go to [netlify.com](https://netlify.com), **Add new site → Import an
+   existing project**, and connect that repo. Netlify will detect
+   `netlify.toml` automatically.
+3. Before the first deploy, go to **Site settings → Environment variables**
+   and add these — this is where your *secret* keys go, never into a file
+   in the repo:
+
+   | Key | Value |
+   |---|---|
+   | `STRIPE_SECRET_KEY` | from step 2.4 |
+   | `STRIPE_WEBHOOK_SECRET` | from step 2.5 (add this after step 5 below, or set a placeholder for now) |
+   | `STRIPE_PRICE_ID` | from step 2.3 |
+   | `SUPABASE_URL` | from step 1.2 |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → **service_role** key (different from the anon key — keep this one very private, it bypasses all security rules) |
+   | `SITE_URL` | your Netlify URL, e.g. `https://your-site.netlify.app` |
+
+4. Deploy. Netlify will install `stripe` and `@supabase/supabase-js` for the
+   functions automatically from `package.json`.
+
+---
+
+## 5. Finish the Stripe webhook
+
+Now that you have a real Netlify URL, go back to **Stripe → Developers →
+Webhooks**, finish creating the endpoint from step 2.5 with the real URL,
+and copy the signing secret into Netlify's `STRIPE_WEBHOOK_SECRET`
+environment variable (redeploy after updating it).
+
+---
+
+## 6. Test it end to end
+
+1. Visit `flowline-account.html` on your deployed site and sign up with a
+   real-looking email.
+2. Click **Upgrade to Pro**. Stripe Checkout opens — use a
+   [Stripe test card](https://docs.stripe.com/testing) like
+   `4242 4242 4242 4242`, any future expiry, any CVC.
+3. After checkout, you should land back on the account page showing
+   **Pro — active**. If it still shows "Free plan," check the Netlify
+   function logs (**Netlify → Functions → stripe-webhook**) for errors —
+   this is almost always a mismatched webhook secret or price ID.
+4. Open `flowline-vsm.html`, build a small map, click **Save to my
+   account**, then go back to `flowline-account.html` — it should appear
+   in your saved items list.
+
+---
+
+## What's wired up right now vs. what's a pattern to copy
+
+**Fully wired:** sign up/in, subscription status, Stripe checkout and
+billing portal, and save/load on the **Value Stream Mapper** as the
+working example.
+
+**Not yet wired, but same pattern:** save/load on the other 13 tools. Each
+one just needs the same four pieces the VSM got — a "Save to my account"
+button, a "My saved X" panel, a load-from-`?load=` handler, and a call to
+`Flowline.saveItem('toolname', title, state)`. Once you've confirmed the
+VSM version works end to end, tell me and I'll roll the same pattern out to
+the rest.
+
+**A decision you still need to make:** right now every tool is fully usable
+for free, and only *saving to an account* is behind sign-up (not even
+behind payment yet — any signed-in free user can save). If you want the
+paywall to actually restrict something, we should decide together what
+"Pro" gates — e.g. saving/loading at all, or unlimited saved items vs. a
+free cap, or exporting PDFs. Say the word and I'll wire `Flowline.isActive()`
+into whichever feature you want gated.

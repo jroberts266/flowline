@@ -1,0 +1,10 @@
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+[functions]
+  node_bundler = "esbuild"
+
+# Stripe webhooks need the raw, unparsed request body to verify signatures —
+# Netlify passes this through correctly for standard function invocations,
+# no special config needed beyond pointing at the right handler above.

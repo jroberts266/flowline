@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — My Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .acct-wrap{ max-width:640px; margin:0 auto; padding:40px 20px 60px; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:24px; margin-bottom:20px; box-shadow:var(--shadow); }
+  .card h2{ font-size:15px; margin:0 0 14px; }
+  .switch-row{ text-align:center; font-size:12.5px; color:var(--ink-soft); margin-top:12px; }
+  .switch-row a{ color:var(--ink); font-weight:600; cursor:pointer; }
+  .error-msg{ background:var(--accent-push-soft); color:var(--accent-push); border-radius:var(--radius); padding:8px 12px; font-size:12.5px; margin-bottom:12px; display:none; }
+  .plan-badge{ display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding:4px 10px; border-radius:12px; }
+  .plan-badge.active{ background:var(--accent-pull-soft); color:var(--accent-pull); }
+  .plan-badge.none{ background:#F0F0EA; color:var(--ink-soft); }
+  .saved-row{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--grid); font-size:13px; }
+  .saved-row:last-child{ border-bottom:none; }
+  .saved-row .meta{ font-size:11px; color:var(--ink-faint); }
+  .not-configured{ text-align:center; padding:40px 20px; color:var(--ink-soft); }
+  .not-configured code{ background:var(--grid); padding:2px 6px; border-radius:3px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <span id="account-widget"></span>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <h1>My Account</h1>
+    <p>Sign in to save your maps and reports, and to manage your subscription.</p>
+  </div>
+</div>
+
+<div class="acct-wrap" id="app">
+  <!-- filled in by JS -->
+</div>
+
+<footer class="credit">Flowline</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="flowline-config.js"></script>
+<script src="flowline-auth.js"></script>
+<script>
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const TOOL_LABELS = {
+  vsm:'Value Stream Map', 'future-vsm':'Future-State VSM', a3:'A3 Report', dmaic:'DMAIC Charter',
+  'kaizen-charter':'Kaizen Event Charter', fishbone:'Fishbone Diagram', '5why':'5 Whys Analysis',
+  yamazumi:'Yamazumi Chart', kpi:'KPI Dashboard'
+};
+const TOOL_PAGE = {
+  vsm:'flowline-vsm.html', 'future-vsm':'flowline-future-vsm.html', a3:'flowline-a3.html',
+  dmaic:'flowline-dmaic.html', 'kaizen-charter':'flowline-kaizen-charter.html',
+  fishbone:'flowline-fishbone.html', '5why':'flowline-5why.html', yamazumi:'flowline-yamazumi.html',
+  kpi:'flowline-kpi.html'
+};
+
+async function render(){
+  const app = document.getElementById('app');
+
+  if (!window.Flowline || !Flowline.configured){
+    app.innerHTML = `<div class="card not-configured">
+      Flowline isn't connected to a Supabase project yet.<br><br>
+      Fill in <code>flowline-config.js</code> with your project URL and anon key, then reload this page.
+    </div>`;
+    return;
+  }
+
+  const user = await Flowline.getUser();
+
+  if (!user){
+    renderAuthForms(app);
+    return;
+  }
+
+  const sub = await Flowline.getSubscription();
+  const active = Flowline.isActive(sub);
+
+  app.innerHTML = `
+    <div class="card">
+      <h2>Signed in as ${esc(user.email)}</h2>
+      <span class="plan-badge ${active?'active':'none'}">${active ? 'Pro — active' : 'Free plan'}</span>
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+        ${active
+          ? `<button class="btn-ghost" id="btn-portal">Manage billing</button>`
+          : `<button class="btn-primary" id="btn-upgrade">Upgrade to Pro</button>`}
+        <button class="btn-ghost" id="btn-signout">Sign out</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Your saved items</h2>
+      <div id="saved-list">Loading…</div>
+    </div>
+  `;
+
+  document.getElementById('btn-signout').onclick = () => Flowline.signOut();
+  const upgradeBtn = document.getElementById('btn-upgrade');
+  if (upgradeBtn) upgradeBtn.onclick = async () => {
+    try { await Flowline.startCheckout(); } catch(e){ alert(e.message); }
+  };
+  const portalBtn = document.getElementById('btn-portal');
+  if (portalBtn) portalBtn.onclick = async () => {
+    try { await Flowline.openBillingPortal(); } catch(e){ alert(e.message); }
+  };
+
+  renderSavedList();
+}
+
+async function renderSavedList(){
+  const wrap = document.getElementById('saved-list');
+  const tools = Object.keys(TOOL_LABELS);
+  let allItems = [];
+  for (const tool of tools){
+    const items = await Flowline.listItems(tool);
+    items.forEach(i => allItems.push({ ...i, tool }));
+  }
+  allItems.sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+  if (allItems.length === 0){
+    wrap.innerHTML = '<div class="empty-note">Nothing saved yet. Open any tool, make something, and use its "Save to my account" button.</div>';
+    return;
+  }
+  wrap.innerHTML = allItems.map(item => `
+    <div class="saved-row">
+      <div>
+        <div>${esc(item.title)}</div>
+        <div class="meta">${TOOL_LABELS[item.tool]} · updated ${new Date(item.updated_at).toLocaleDateString()}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <a class="btn-mini" href="${TOOL_PAGE[item.tool]}?load=${item.id}">Open</a>
+        <button class="btn-mini" data-id="${item.id}" title="Delete">✕</button>
+      </div>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('button[data-id]').forEach(btn=>{
+    btn.onclick = async () => {
+      await Flowline.deleteItem(btn.dataset.id);
+      renderSavedList();
+    };
+  });
+}
+
+function renderAuthForms(app, mode){
+  mode = mode || 'signin';
+  app.innerHTML = `
+    <div class="card">
+      <h2>${mode === 'signin' ? 'Sign in' : 'Create an account'}</h2>
+      <div class="error-msg" id="err"></div>
+      <div class="field"><label>Email</label><input type="email" id="f-email"></div>
+      <div class="field"><label>Password</label><input type="password" id="f-password"></div>
+      <button class="btn-primary" id="btn-submit" style="width:100%;">${mode === 'signin' ? 'Sign in' : 'Sign up'}</button>
+      <div class="switch-row">
+        ${mode === 'signin'
+          ? `Don't have an account? <a id="switch">Sign up</a>`
+          : `Already have an account? <a id="switch">Sign in</a>`}
+      </div>
+    </div>
+  `;
+  document.getElementById('switch').onclick = () => renderAuthForms(app, mode === 'signin' ? 'signup' : 'signin');
+  document.getElementById('btn-submit').onclick = async () => {
+    const email = document.getElementById('f-email').value.trim();
+    const password = document.getElementById('f-password').value;
+    const errEl = document.getElementById('err');
+    errEl.style.display = 'none';
+    try {
+      if (mode === 'signin'){
+        const { error } = await Flowline.signIn(email, password);
+        if (error) throw error;
+      } else {
+        const { error } = await Flowline.signUp(email, password);
+        if (error) throw error;
+      }
+      render();
+    } catch(e){
+      errEl.textContent = e.message || 'Something went wrong.';
+      errEl.style.display = 'block';
+    }
+  };
+}
+
+render();
+</script>
+</body>
+</html>
