@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — KPI Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:16px; }
+  .kpi-card{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; position:relative; overflow:hidden; }
+  .kpi-card::before{ content:''; position:absolute; top:0; left:0; width:5px; height:100%; }
+  .kpi-card.good::before{ background:var(--accent-pull); }
+  .kpi-card.warn::before{ background:var(--accent-kaizen); }
+  .kpi-card.bad::before{ background:var(--accent-push); }
+  .kpi-card .top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .kpi-card .name{ font-weight:700; font-size:13px; }
+  .kpi-card .rm{ font-size:11px; color:var(--ink-faint); cursor:pointer; }
+  .kpi-card .rm:hover{ color:var(--danger); }
+  .kpi-card .val-row{ display:flex; align-items:baseline; gap:8px; margin:10px 0 6px; }
+  .kpi-card .cur{ font-family:var(--mono); font-size:28px; font-weight:700; }
+  .kpi-card .unit{ font-size:12px; color:var(--ink-soft); }
+  .kpi-card .target-line{ font-size:11px; color:var(--ink-soft); font-family:var(--mono); }
+  .kpi-card .bar-track{ height:6px; background:var(--grid); border-radius:3px; overflow:hidden; margin-top:8px; }
+  .kpi-card .bar-fill{ height:100%; border-radius:3px; }
+  .kpi-card .spark{ margin-top:10px; }
+  .kpi-card .edit-toggle{ font-size:10.5px; color:var(--ink-faint); cursor:pointer; margin-top:8px; display:inline-block; }
+  .edit-panel{ margin-top:8px; display:none; border-top:1px dashed var(--line); padding-top:8px; }
+  .edit-panel.open{ display:block; }
+  .edit-panel .row2{ margin-bottom:6px; }
+  .edit-panel input, .edit-panel select{ font-size:11.5px; padding:4px 6px; }
+  .history-row{ display:flex; gap:4px; margin-bottom:4px; }
+  .history-row input{ flex:1; }
+  .add-kpi-card{
+    border:1px dashed var(--line); border-radius:8px; display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft); font-size:13px; font-weight:600; cursor:pointer; min-height:150px;
+  }
+  .add-kpi-card:hover{ border-color:var(--ink); color:var(--ink); }
+  .summary-row{ margin-bottom:20px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group">
+            <h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a>
+            <a href="flowline-hourly.html">Hour-by-Hour Board<small>Live production tracking</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-5why.html">5 Whys Analysis<small>Root cause drill-down</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);">Plan &amp; Manage</span>
+    <h1>KPI Dashboard</h1>
+    <p>Track the metrics that matter against target, with a quick trend line for each.</p>
+  </div>
+  <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+</div>
+
+<main class="canvas-wrap" style="padding:24px;">
+  <div class="summary-row stat-row" id="summary-row"></div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+</main>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+let kpis = [
+  { id:uid(), name:'OEE', current:72, target:85, unit:'%', lowerIsBetter:false, history:[65,68,70,71,72] },
+  { id:uid(), name:'Scrap Rate', current:3.2, target:1.5, unit:'%', lowerIsBetter:true, history:[5,4.5,4,3.6,3.2] },
+  { id:uid(), name:'On-Time Delivery', current:91, target:98, unit:'%', lowerIsBetter:false, history:[85,87,89,90,91] },
+  { id:uid(), name:'Lead Time', current:6.1, target:3.5, unit:'days', lowerIsBetter:true, history:[8,7.5,7,6.5,6.1] }
+];
+let openEdit = null;
+
+function status(k){
+  const met = k.lowerIsBetter ? k.current<=k.target : k.current>=k.target;
+  if (met) return 'good';
+  const gap = k.lowerIsBetter ? (k.current-k.target)/Math.max(k.target,0.0001) : (k.target-k.current)/Math.max(k.target,0.0001);
+  return gap <= 0.15 ? 'warn' : 'bad';
+}
+
+function progressPct(k){
+  if (k.lowerIsBetter){
+    // lower is better: progress = how far below a "worst case" (2x target or history max) we are
+    const worst = Math.max(k.target*2, ...k.history, k.current) || 1;
+    const pct = (worst - k.current) / (worst - k.target || 1) * 100;
+    return Math.max(4, Math.min(100, pct));
+  } else {
+    const pct = (k.current / (k.target || 1)) * 100;
+    return Math.max(4, Math.min(100, pct));
+  }
+}
+
+function sparkSvg(history, good){
+  if (!history || history.length<2) return '';
+  const W=180,H=36,pad=4;
+  const min = Math.min(...history), max = Math.max(...history);
+  const range = (max-min)||1;
+  const pts = history.map((v,i)=>{
+    const x = pad + (i/(history.length-1))*(W-pad*2);
+    const y = H-pad - ((v-min)/range)*(H-pad*2);
+    return `${x},${y}`;
+  });
+  const color = good ? 'var(--accent-pull)' : 'var(--accent-push)';
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="100%" height="36"><polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2"/></svg>`;
+}
+
+function render(){
+  const grid = document.getElementById('kpi-grid');
+  grid.innerHTML = '';
+  let metCount=0;
+  kpis.forEach(k=>{
+    const st = status(k);
+    if (st==='good') metCount++;
+    const barColor = st==='good' ? 'var(--accent-pull)' : st==='warn' ? 'var(--accent-kaizen)' : 'var(--accent-push)';
+    const card = document.createElement('div');
+    card.className = `kpi-card ${st}`;
+    card.innerHTML = `
+      <div class="top">
+        <span class="name">${esc(k.name)}</span>
+        <span class="rm" title="Remove">✕</span>
+      </div>
+      <div class="val-row"><span class="cur">${k.current}</span><span class="unit">${esc(k.unit)}</span></div>
+      <div class="target-line">Target: ${k.target}${esc(k.unit)} ${k.lowerIsBetter?'(lower is better)':'(higher is better)'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${progressPct(k)}%;background:${barColor};"></div></div>
+      ${sparkSvg(k.history, st==='good')}
+      <span class="edit-toggle">Edit / add data point ▾</span>
+      <div class="edit-panel ${openEdit===k.id?'open':''}">
+        <div class="row2"><input type="text" value="${esc(k.name)}" placeholder="Name"><input type="text" value="${esc(k.unit)}" placeholder="Unit"></div>
+        <div class="row2"><input type="number" value="${k.current}" placeholder="Current" step="any"><input type="number" value="${k.target}" placeholder="Target" step="any"></div>
+        <label style="font-size:11px;color:var(--ink-soft);display:flex;gap:6px;align-items:center;margin:6px 0;">
+          <input type="checkbox" style="width:14px;height:14px;" ${k.lowerIsBetter?'checked':''}> Lower is better
+        </label>
+        <div class="history-row"><input type="text" placeholder="Add trend point (number)"><button class="btn-mini" type="button">Add</button></div>
+      </div>
+    `;
+    card.querySelector('.rm').onclick = ()=>{ kpis = kpis.filter(x=>x.id!==k.id); render(); };
+    card.querySelector('.edit-toggle').onclick = ()=>{ openEdit = openEdit===k.id ? null : k.id; render(); };
+
+    const editInputs = card.querySelectorAll('.edit-panel input[type=text], .edit-panel input[type=number]');
+    editInputs[0].oninput = e=>{ k.name=e.target.value; render(); };
+    editInputs[1].oninput = e=>{ k.unit=e.target.value; render(); };
+    editInputs[2].oninput = e=>{ k.current=parseFloat(e.target.value)||0; render(); };
+    editInputs[3].oninput = e=>{ k.target=parseFloat(e.target.value)||0; render(); };
+    card.querySelector('.edit-panel input[type=checkbox]').onchange = e=>{ k.lowerIsBetter=e.target.checked; render(); };
+    const histInput = card.querySelector('.history-row input[type=text]');
+    card.querySelector('.history-row button').onclick = ()=>{
+      const v = parseFloat(histInput.value);
+      if (!isNaN(v)){ k.history.push(v); k.current=v; render(); }
+    };
+
+    grid.appendChild(card);
+  });
+
+  const addCard = document.createElement('div');
+  addCard.className = 'add-kpi-card';
+  addCard.textContent = '+ Add KPI';
+  addCard.onclick = ()=>{
+    const nk = { id:uid(), name:'New KPI', current:0, target:0, unit:'', lowerIsBetter:false, history:[] };
+    kpis.push(nk); openEdit = nk.id; render();
+  };
+  grid.appendChild(addCard);
+
+  document.getElementById('summary-row').innerHTML = `
+    <div class="stat good"><label>On target</label><div class="val">${metCount}/${kpis.length}</div></div>
+    <div class="stat"><label>Tracked KPIs</label><div class="val">${kpis.length}</div></div>
+  `;
+}
+
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+render();
+</script>
+</body>
+</html>

@@ -17,7 +17,9 @@ that serves static files.
 | `flowline-future-vsm.html` | Future-State VSM & gap summary |
 | `flowline-yamazumi.html` | Yamazumi (line-balancing) chart |
 | `flowline-takt.html` | Takt time / demand calculator |
+| `flowline-hourly.html` | Hour-by-hour production board |
 | `flowline-fishbone.html` | Ishikawa / fishbone root-cause builder |
+| `flowline-5why.html` | 5 Whys root-cause analysis |
 | `flowline-pareto.html` | Pareto chart generator |
 | `flowline-capability.html` | Process capability (Cp/Cpk) calculator |
 | `flowline-oee.html` | OEE calculator |
@@ -26,11 +28,12 @@ that serves static files.
 | `flowline-kaizen-charter.html` | Kaizen event charter |
 | `flowline-5s.html` | 5S audit scorecard |
 | `flowline-kanban.html` | Kanban visual board |
+| `flowline-kpi.html` | KPI dashboard |
 | `flowline-glossary.html` | Lean & Six Sigma glossary |
 | `flowline.css` | Shared design system (used by every page) |
 | `flowline.js` | Shared nav dropdown behavior (used by every page) |
 
-**Keep all 17 files together in one folder.** Every page links to the others
+**Keep all 20 files together in one folder.** Every page links to the others
 with relative paths (e.g. `flowline-vsm.html`, `flowline.css`), so as long as
 they're siblings in the same directory, everything works — locally or deployed.
 
@@ -49,7 +52,7 @@ automatically or sent anywhere.
 
 1. Create a free GitHub account if you don't already have one.
 2. Create a new repository (e.g. `flowline`).
-3. Upload all 17 files to the root of the repository — drag-and-drop in the
+3. Upload all 20 files to the root of the repository — drag-and-drop in the
    GitHub web UI works fine, no command line required.
 4. In the repo, go to **Settings → Pages**.
 5. Under "Source," select your branch (usually `main`) and folder (`/ (root)`),

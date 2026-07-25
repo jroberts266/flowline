@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Hour-by-Hour Production Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .stat-row{ margin-bottom:18px; }
+  table.hbh{ width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  table.hbh th{ text-align:left; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); background:#F5F6EF; padding:8px 10px; border-bottom:1px solid var(--line); }
+  table.hbh td{ padding:6px 8px; border-bottom:1px solid var(--grid); font-size:12.5px; vertical-align:middle; }
+  table.hbh input[type=number]{ width:70px; padding:5px 6px; }
+  table.hbh input[type=text]{ padding:5px 6px; width:100%; }
+  table.hbh tr.behind{ background:var(--accent-push-soft); }
+  table.hbh tr.ahead{ background:var(--accent-pull-soft); }
+  .var-cell{ font-family:var(--mono); font-weight:700; text-align:right; }
+  .var-cell.neg{ color:var(--accent-push); }
+  .var-cell.pos{ color:var(--accent-pull); }
+  #chart-holder{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:14px; margin-bottom:18px; }
+  .hour-cell{ font-family:var(--mono); font-weight:600; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group">
+            <h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a>
+            <a href="flowline-hourly.html">Hour-by-Hour Board<small>Live production tracking</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-5why.html">5 Whys Analysis<small>Root cause drill-down</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:var(--accent-push-soft);color:var(--accent-push);">Mapping &amp; Flow</span>
+    <h1>Hour-by-Hour Production Board</h1>
+    <p>The shop-floor tracking sheet: target vs. actual for every hour of the shift, with a reason logged the moment you fall behind.</p>
+  </div>
+  <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Shift setup</h2>
+      <div class="row2">
+        <div class="field"><label>Shift start (hour, 24h)</label><input type="number" id="in-start" value="6" min="0" max="23"></div>
+        <div class="field"><label>Shift length (hours)</label><input type="number" id="in-hours" value="8" min="1" max="24"></div>
+      </div>
+      <div class="field"><label>Target units / hour</label><input type="number" id="in-target" value="55" min="0"></div>
+      <div class="hint">Change any hour's target individually in the table if the line doesn't run flat.</div>
+    </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div class="stat-row" id="stat-row"></div>
+    <div id="chart-holder"></div>
+    <table class="hbh">
+      <thead><tr><th>Hour</th><th>Target</th><th>Actual</th><th>Hourly Var</th><th>Cumulative Target</th><th>Cumulative Actual</th><th>Cumulative Var</th><th>Reason if behind</th></tr></thead>
+      <tbody id="hbh-body"></tbody>
+    </table>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+let rows = [];
+let overrides = {}; // per-row target override, actual, reason keyed by index
+
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function num(id){ return parseFloat(document.getElementById(id).value)||0; }
+function fmtHour(h){ const hh = ((h%24)+24)%24; return (hh%12===0?12:hh%12) + (hh<12?'am':'pm'); }
+
+function buildRows(){
+  const start = num('in-start'), hours = num('in-hours'), defaultTarget = num('in-target');
+  const newRows = [];
+  for (let i=0;i<hours;i++){
+    const hour = start+i;
+    const prev = rows[i];
+    newRows.push({
+      hour,
+      target: overrides[i] && overrides[i].target!=null ? overrides[i].target : defaultTarget,
+      actual: overrides[i] && overrides[i].actual!=null ? overrides[i].actual : (prev? prev.actual : null),
+      reason: overrides[i] ? (overrides[i].reason||'') : (prev? prev.reason : '')
+    });
+  }
+  rows = newRows;
+}
+
+function renderTable(){
+  buildRows();
+  const tbody = document.getElementById('hbh-body');
+  tbody.innerHTML = '';
+  let cumTarget=0, cumActual=0;
+  rows.forEach((r,i)=>{
+    cumTarget += r.target;
+    const hasActual = r.actual!=null && r.actual!=='';
+    if (hasActual) cumActual += parseFloat(r.actual);
+    const hourlyVar = hasActual ? (parseFloat(r.actual)-r.target) : null;
+    const cumVar = cumActual - cumTarget; // only meaningful once some actuals entered, still fine as running number
+    const tr = document.createElement('tr');
+    if (hasActual && hourlyVar < 0) tr.className='behind';
+    else if (hasActual && hourlyVar > 0) tr.className='ahead';
+    tr.innerHTML = `
+      <td class="hour-cell">${fmtHour(r.hour)}–${fmtHour(r.hour+1)}</td>
+      <td><input type="number" value="${r.target}" data-i="${i}" data-f="target"></td>
+      <td><input type="number" value="${hasActual?r.actual:''}" placeholder="—" data-i="${i}" data-f="actual"></td>
+      <td class="var-cell ${hourlyVar==null?'':hourlyVar<0?'neg':'pos'}">${hourlyVar==null?'—':(hourlyVar>0?'+':'')+hourlyVar}</td>
+      <td class="var-cell" style="color:var(--ink-soft);">${cumTarget}</td>
+      <td class="var-cell" style="color:var(--ink-soft);">${cumActual}</td>
+      <td class="var-cell ${cumVar<0?'neg':cumVar>0?'pos':''}">${cumVar>0?'+':''}${cumVar}</td>
+      <td><input type="text" value="${esc(r.reason)}" placeholder="${hasActual&&hourlyVar<0?'Why behind?':''}" data-i="${i}" data-f="reason"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const i = +e.target.dataset.i, f = e.target.dataset.f;
+      if (!overrides[i]) overrides[i] = {};
+      overrides[i][f] = f==='reason' ? e.target.value : (e.target.value===''? null : parseFloat(e.target.value));
+      renderTable();
+    });
+  });
+
+  renderStats(cumTarget, cumActual);
+  renderChart();
+}
+
+function renderStats(cumTarget, cumActual){
+  const diff = cumActual - cumTarget;
+  const pct = cumTarget>0 ? (cumActual/cumTarget*100) : 0;
+  document.getElementById('stat-row').innerHTML = `
+    <div class="stat-row">
+      <div class="stat"><label>Cumulative target</label><div class="val">${cumTarget}</div></div>
+      <div class="stat"><label>Cumulative actual</label><div class="val">${cumActual}</div></div>
+      <div class="stat ${diff<0?'warn':diff>0?'good':''}"><label>Variance</label><div class="val">${diff>0?'+':''}${diff}</div></div>
+      <div class="stat ${pct<95?'warn':'good'}"><label>% to plan</label><div class="val">${pct.toFixed(0)}%</div></div>
+    </div>`;
+}
+
+function renderChart(){
+  const holder = document.getElementById('chart-holder');
+  const withActual = rows.filter(r=>r.actual!=null);
+  if (withActual.length===0){ holder.innerHTML = '<div class="empty-note">Enter actuals to see the hourly chart.</div>'; return; }
+  const W = Math.max(500, rows.length*70), H=220, padL=40, padR=20, padT=16, padB=30;
+  const maxVal = Math.max(...rows.map(r=>r.target), ...rows.map(r=>r.actual||0)) * 1.2 || 10;
+  const barGap = (W-padL-padR)/rows.length;
+  const barW = Math.min(24, barGap*0.32);
+  const yScale = v => (H-padB) - (v/maxVal)*(H-padT-padB);
+
+  let bars='';
+  rows.forEach((r,i)=>{
+    const cx = padL + barGap*i + barGap/2;
+    const targetH = (H-padB)-yScale(r.target);
+    bars += `<rect x="${cx-barW-2}" y="${yScale(r.target)}" width="${barW}" height="${targetH}" fill="var(--ink-faint)"/>`;
+    if (r.actual!=null){
+      const actualH = (H-padB)-yScale(r.actual);
+      const color = r.actual>=r.target ? 'var(--accent-pull)' : 'var(--accent-push)';
+      bars += `<rect x="${cx+2}" y="${yScale(r.actual)}" width="${barW}" height="${actualH}" fill="${color}"/>`;
+    }
+    bars += `<text x="${cx}" y="${H-padB+14}" font-size="9" text-anchor="middle" fill="var(--ink-soft)" font-family="var(--mono)">${fmtHour(r.hour)}</text>`;
+  });
+
+  holder.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;">
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--ink-faint)"/>
+    ${bars}
+  </svg>
+  <div style="display:flex;gap:16px;font-size:11px;color:var(--ink-soft);margin-top:6px;">
+    <span><span style="display:inline-block;width:10px;height:10px;background:var(--ink-faint);margin-right:4px;"></span>Target</span>
+    <span><span style="display:inline-block;width:10px;height:10px;background:var(--accent-pull);margin-right:4px;"></span>Actual (met)</span>
+    <span><span style="display:inline-block;width:10px;height:10px;background:var(--accent-push);margin-right:4px;"></span>Actual (behind)</span>
+  </div>`;
+}
+
+document.getElementById('in-start').addEventListener('input', renderTable);
+document.getElementById('in-hours').addEventListener('input', renderTable);
+document.getElementById('in-target').addEventListener('input', renderTable);
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+
+renderTable();
+</script>
+</body>
+</html>
