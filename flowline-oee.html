@@ -26,30 +26,41 @@
   <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
   <div class="nav-right">
     <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="flowline-account.html">Account</a>
     <div class="dropdown" id="resources-dropdown">
       <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
       <div class="dropdown-menu">
         <div class="menu-cols">
-          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+          <div class="menu-group">
+            <h5>Mapping &amp; Flow</h5>
             <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
             <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
             <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
-            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
-          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a>
+            <a href="flowline-hourly.html">Hour-by-Hour Board<small>Live production tracking</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Analysis &amp; Quality</h5>
             <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-5why.html">5 Whys Analysis<small>Root cause drill-down</small></a>
             <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
             <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
-            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
-          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Plan &amp; Manage</h5>
             <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
             <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
             <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
             <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
             <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
-            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+            <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
+          </div>
         </div>
       </div>
     </div>
+    <span id="account-widget"></span>
   </div>
 </nav>
 
@@ -59,7 +70,10 @@
     <h1>OEE Calculator</h1>
     <p>Overall Equipment Effectiveness = Availability × Performance × Quality.</p>
   </div>
+  <button class="btn-ghost no-print" id="btn-save-account">Save to my account</button>
+  <button class="btn-ghost no-print" id="btn-my-items">My saved items</button>
 </div>
+<div id="saved-items-panel" class="no-print" style="max-width:1200px;margin:0 auto 16px;padding:0 24px;display:none;"></div>
 
 <div class="calc-wrap">
   <div class="section">
@@ -103,6 +117,9 @@
 
 <footer class="credit">Flowline — data stays in your browser.</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="flowline-config.js"></script>
+<script src="flowline-auth.js"></script>
 <script src="flowline.js"></script>
 <script>
 function num(id){ return parseFloat(document.getElementById(id).value)||0; }
@@ -139,6 +156,88 @@ function calc(){
 }
 document.querySelectorAll('input').forEach(el=> el.addEventListener('input', calc));
 calc();
+
+
+/* ============================================================================
+   SAVE TO ACCOUNT / MY SAVED Calculations
+============================================================================ */
+let currentSavedId = null;
+const SAVE_TOOL_KEY = 'oee';
+
+function gatherSaveData(){ const ids=['in-planned','in-down','in-ideal','in-total','in-good']; const out={}; ids.forEach(id=>{ const el=document.getElementById(id); if(el) out[id]=el.value; }); return out; }
+function applySavedData(data){
+  Object.keys(data).forEach(id=>{ const el=document.getElementById(id); if(el) el.value=data[id]; });
+  calc();
+}
+
+document.getElementById('btn-save-account').addEventListener('click', async ()=>{
+  if (!window.Flowline || !Flowline.configured){ alert('This site isn\'t connected to a Flowline account backend yet. See SETUP.md.'); return; }
+  const user = await Flowline.getUser();
+  if (!user){ window.location.href = 'flowline-account.html'; return; }
+  const defaultTitle = 'OEE calc — ' + new Date().toLocaleDateString();
+  const title = prompt('Name this calculation:', defaultTitle);
+  if (title === null) return;
+  try{
+    const row = await Flowline.saveItem(SAVE_TOOL_KEY, title || defaultTitle, gatherSaveData(), currentSavedId);
+    currentSavedId = row.id;
+    alert('Saved.');
+  }catch(e){ alert('Could not save: ' + e.message); }
+});
+
+document.getElementById('btn-my-items').addEventListener('click', async ()=>{
+  const panel = document.getElementById('saved-items-panel');
+  if (panel.style.display === 'block'){ panel.style.display='none'; return; }
+  await renderSavedItemsPanel();
+});
+
+async function renderSavedItemsPanel(){
+  const panel = document.getElementById('saved-items-panel');
+  if (!window.Flowline || !Flowline.configured){
+    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Flowline account backend yet. See SETUP.md.</div>';
+    panel.style.display = 'block';
+    return;
+  }
+  const user = await Flowline.getUser();
+  if (!user){ window.location.href = 'flowline-account.html'; return; }
+  panel.innerHTML = 'Loading…';
+  panel.style.display = 'block';
+  const items = await Flowline.listItems(SAVE_TOOL_KEY);
+  if (items.length === 0){
+    panel.innerHTML = '<div class="empty-note">No saved items yet.</div>';
+    return;
+  }
+  panel.innerHTML = items.map(i => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--grid);font-size:12.5px;">
+      <span>${i.title} <span style="color:var(--ink-faint);font-size:11px;">— ${new Date(i.updated_at).toLocaleDateString()}</span></span>
+      <span style="display:flex;gap:6px;">
+        <button class="btn-mini" data-open="${i.id}">Open</button>
+        <button class="btn-mini" data-del="${i.id}">✕</button>
+      </span>
+    </div>`).join('');
+  panel.querySelectorAll('[data-open]').forEach(btn=>{
+    btn.onclick = ()=> loadSavedEntry(btn.dataset.open);
+  });
+  panel.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick = async ()=>{ await Flowline.deleteItem(btn.dataset.del); renderSavedItemsPanel(); };
+  });
+}
+
+async function loadSavedEntry(id){
+  try{
+    const row = await Flowline.loadItem(id);
+    applySavedData(row.data);
+    currentSavedId = row.id;
+    document.getElementById('saved-items-panel').style.display = 'none';
+  }catch(e){ alert('Could not load: ' + e.message); }
+}
+
+window.addEventListener('load', ()=>{
+  const params = new URLSearchParams(window.location.search);
+  const loadId = params.get('load');
+  if (loadId && window.Flowline){
+    Flowline.getUser().then(user=>{ if (user) loadSavedEntry(loadId); });
+  }
+});
 </script>
 </body>
 </html>
