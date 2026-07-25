@@ -16,7 +16,7 @@ window.FLOWLINE_CONFIG = {
   STRIPE_PUBLISHABLE_KEY: "ppk_test_51Tx7LYBUHLeN9mfLBBl2v7A3xqCT4AWlm9gWpaOwKjS0PKgY9TDsxqDTHKFS4HMUabNR28uaRpE6PUW3IhcGqmIS00leHNHRtF",
 
   // The Stripe Price ID for your subscription (Product catalog → your product → pricing)
-  STRIPE_PRICE_ID: "prod_Ux1RzWNqhDnBKk",
+  STRIPE_PRICE_ID: "price_1Tx7ORBUHLeN9mfL2FgmaJT5",
 
   // Where your serverless functions live once deployed, e.g.
   // "https://your-site.netlify.app/.netlify/functions"
