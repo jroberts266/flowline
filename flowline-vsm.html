@@ -172,6 +172,7 @@
   </a>
   <div class="nav-right">
     <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="flowline-account.html">Account</a>
     <div class="dropdown" id="resources-dropdown">
       <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
       <div class="dropdown-menu">
@@ -182,10 +183,12 @@
             <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
             <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
             <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a>
+            <a href="flowline-hourly.html">Hour-by-Hour Board<small>Live production tracking</small></a>
           </div>
           <div class="menu-group">
             <h5>Analysis &amp; Quality</h5>
             <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-5why.html">5 Whys Analysis<small>Root cause drill-down</small></a>
             <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
             <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
             <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a>
@@ -197,11 +200,13 @@
             <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
             <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
             <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
             <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
           </div>
         </div>
       </div>
     </div>
+    <span id="account-widget"></span>
   </div>
 </nav>
 
@@ -305,7 +310,10 @@
       <div class="title">CURRENT-STATE MAP · not to scale</div>
       <button class="btn-ghost" id="btn-download-svg" type="button">Download map as SVG</button>
       <button class="btn-ghost" id="btn-download-json" type="button">Export data (.json)</button>
+      <button class="btn-ghost" id="btn-save-account" type="button">Save to my account</button>
+      <button class="btn-ghost" id="btn-my-maps" type="button">My saved maps</button>
     </div>
+    <div id="saved-maps-panel" style="display:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:14px;"></div>
     <div id="vsm-svg-holder"></div>
 
     <div class="legend" id="legend"></div>
@@ -923,6 +931,98 @@ document.getElementById('btn-download-json').addEventListener('click', ()=>{
   URL.revokeObjectURL(url);
 });
 
+/* ============================================================================
+   SAVE TO ACCOUNT / MY SAVED MAPS
+   (requires flowline-config.js to be filled in with a real Supabase project —
+   see SETUP.md. Buttons work fine without it, they'll just prompt to sign in
+   or explain the backend isn't connected yet.)
+============================================================================ */
+let currentSavedId = null;
+
+document.getElementById('btn-save-account').addEventListener('click', async ()=>{
+  if (!window.Flowline || !Flowline.configured){
+    alert('This site isn\'t connected to a Flowline account backend yet. See SETUP.md.');
+    return;
+  }
+  const user = await Flowline.getUser();
+  if (!user){ window.location.href = 'flowline-account.html'; return; }
+  const defaultTitle = `${state.steps.length}-step VSM — ${state.customerName || 'Untitled'}`;
+  const title = prompt('Name this map:', defaultTitle);
+  if (title === null) return;
+  try{
+    const row = await Flowline.saveItem('vsm', title || defaultTitle, state, currentSavedId);
+    currentSavedId = row.id;
+    alert('Saved.');
+  }catch(e){ alert('Could not save: ' + e.message); }
+});
+
+document.getElementById('btn-my-maps').addEventListener('click', async ()=>{
+  const panel = document.getElementById('saved-maps-panel');
+  if (panel.style.display === 'block'){ panel.style.display='none'; return; }
+  await renderSavedMapsPanel();
+});
+
+async function renderSavedMapsPanel(){
+  const panel = document.getElementById('saved-maps-panel');
+  if (!window.Flowline || !Flowline.configured){
+    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Flowline account backend yet. See SETUP.md.</div>';
+    panel.style.display = 'block';
+    return;
+  }
+  const user = await Flowline.getUser();
+  if (!user){ window.location.href = 'flowline-account.html'; return; }
+  panel.innerHTML = 'Loading…';
+  panel.style.display = 'block';
+  const items = await Flowline.listItems('vsm');
+  if (items.length === 0){
+    panel.innerHTML = '<div class="empty-note">No saved maps yet.</div>';
+    return;
+  }
+  panel.innerHTML = items.map(i => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--grid);font-size:12.5px;">
+      <span>${i.title} <span style="color:var(--ink-faint);font-size:11px;">— ${new Date(i.updated_at).toLocaleDateString()}</span></span>
+      <span style="display:flex;gap:6px;">
+        <button class="btn-mini" data-open="${i.id}">Open</button>
+        <button class="btn-mini" data-del="${i.id}">✕</button>
+      </span>
+    </div>`).join('');
+  panel.querySelectorAll('[data-open]').forEach(btn=>{
+    btn.onclick = ()=> loadSavedMap(btn.dataset.open);
+  });
+  panel.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick = async ()=>{ await Flowline.deleteItem(btn.dataset.del); renderSavedMapsPanel(); };
+  });
+}
+
+async function loadSavedMap(id){
+  try{
+    const row = await Flowline.loadItem(id);
+    state = row.data;
+    currentSavedId = row.id;
+    document.getElementById('in-demand').value = state.demand;
+    document.getElementById('in-shift-min').value = state.shiftMinutes;
+    document.getElementById('in-shifts').value = state.shifts;
+    document.getElementById('in-customer-name').value = state.customerName;
+    document.getElementById('in-customer-freq').value = state.customerFreq;
+    document.getElementById('in-supplier-name').value = state.supplierName;
+    document.getElementById('in-supplier-freq').value = state.supplierFreq;
+    document.getElementById('in-prodcontrol-name').value = state.prodControlName;
+    document.getElementById('saved-maps-panel').style.display = 'none';
+    renderAll();
+  }catch(e){ alert('Could not load that map: ' + e.message); }
+}
+
+// If the page was opened with ?load=<id> (from the account page), load it once Flowline is ready.
+window.addEventListener('load', ()=>{
+  const params = new URLSearchParams(window.location.search);
+  const loadId = params.get('load');
+  if (loadId && window.Flowline){
+    Flowline.getUser().then(user=>{
+      if (user) loadSavedMap(loadId);
+    });
+  }
+});
+
 // initial sync of state from default input values, then render
 state.customerName = txt('in-customer-name');
 state.customerFreq = txt('in-customer-freq');
@@ -931,6 +1031,9 @@ state.supplierFreq = txt('in-supplier-freq');
 state.prodControlName = txt('in-prodcontrol-name');
 renderAll();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="flowline-config.js"></script>
+<script src="flowline-auth.js"></script>
 <script src="flowline.js"></script>
 </body>
 </html>

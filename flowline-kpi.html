@@ -45,6 +45,7 @@
   <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
   <div class="nav-right">
     <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="flowline-account.html">Account</a>
     <div class="dropdown" id="resources-dropdown">
       <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
       <div class="dropdown-menu">
@@ -78,6 +79,7 @@
         </div>
       </div>
     </div>
+    <span id="account-widget"></span>
   </div>
 </nav>
 
@@ -88,7 +90,10 @@
     <p>Track the metrics that matter against target, with a quick trend line for each.</p>
   </div>
   <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+  <button class="btn-ghost no-print" id="btn-save-account">Save to my account</button>
+  <button class="btn-ghost no-print" id="btn-my-items">My saved items</button>
 </div>
+<div id="saved-items-panel" class="no-print" style="max-width:1200px;margin:0 auto 16px;padding:0 24px;display:none;"></div>
 
 <main class="canvas-wrap" style="padding:24px;">
   <div class="summary-row stat-row" id="summary-row"></div>
@@ -97,6 +102,9 @@
 
 <footer class="credit">Flowline — data stays in your browser.</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="flowline-config.js"></script>
+<script src="flowline-auth.js"></script>
 <script src="flowline.js"></script>
 <script>
 function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -207,6 +215,89 @@ function render(){
 
 document.getElementById('btn-print').addEventListener('click', ()=> window.print());
 render();
+
+
+/* ============================================================================
+   SAVE TO ACCOUNT / MY SAVED Dashboards
+============================================================================ */
+let currentSavedId = null;
+const SAVE_TOOL_KEY = 'kpi';
+
+function gatherSaveData(){ return { kpis }; }
+function applySavedData(data){
+  kpis = data.kpis;
+  openEdit = null;
+  render();
+}
+
+document.getElementById('btn-save-account').addEventListener('click', async ()=>{
+  if (!window.Flowline || !Flowline.configured){ alert('This site isn\'t connected to a Flowline account backend yet. See SETUP.md.'); return; }
+  const user = await Flowline.getUser();
+  if (!user){ window.location.href = 'flowline-account.html'; return; }
+  const defaultTitle = 'KPI dashboard — ' + kpis.length + ' metrics';
+  const title = prompt('Name this dashboard:', defaultTitle);
+  if (title === null) return;
+  try{
+    const row = await Flowline.saveItem(SAVE_TOOL_KEY, title || defaultTitle, gatherSaveData(), currentSavedId);
+    currentSavedId = row.id;
+    alert('Saved.');
+  }catch(e){ alert('Could not save: ' + e.message); }
+});
+
+document.getElementById('btn-my-items').addEventListener('click', async ()=>{
+  const panel = document.getElementById('saved-items-panel');
+  if (panel.style.display === 'block'){ panel.style.display='none'; return; }
+  await renderSavedItemsPanel();
+});
+
+async function renderSavedItemsPanel(){
+  const panel = document.getElementById('saved-items-panel');
+  if (!window.Flowline || !Flowline.configured){
+    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Flowline account backend yet. See SETUP.md.</div>';
+    panel.style.display = 'block';
+    return;
+  }
+  const user = await Flowline.getUser();
+  if (!user){ window.location.href = 'flowline-account.html'; return; }
+  panel.innerHTML = 'Loading…';
+  panel.style.display = 'block';
+  const items = await Flowline.listItems(SAVE_TOOL_KEY);
+  if (items.length === 0){
+    panel.innerHTML = '<div class="empty-note">No saved items yet.</div>';
+    return;
+  }
+  panel.innerHTML = items.map(i => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--grid);font-size:12.5px;">
+      <span>${i.title} <span style="color:var(--ink-faint);font-size:11px;">— ${new Date(i.updated_at).toLocaleDateString()}</span></span>
+      <span style="display:flex;gap:6px;">
+        <button class="btn-mini" data-open="${i.id}">Open</button>
+        <button class="btn-mini" data-del="${i.id}">✕</button>
+      </span>
+    </div>`).join('');
+  panel.querySelectorAll('[data-open]').forEach(btn=>{
+    btn.onclick = ()=> loadSavedEntry(btn.dataset.open);
+  });
+  panel.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick = async ()=>{ await Flowline.deleteItem(btn.dataset.del); renderSavedItemsPanel(); };
+  });
+}
+
+async function loadSavedEntry(id){
+  try{
+    const row = await Flowline.loadItem(id);
+    applySavedData(row.data);
+    currentSavedId = row.id;
+    document.getElementById('saved-items-panel').style.display = 'none';
+  }catch(e){ alert('Could not load: ' + e.message); }
+}
+
+window.addEventListener('load', ()=>{
+  const params = new URLSearchParams(window.location.search);
+  const loadId = params.get('load');
+  if (loadId && window.Flowline){
+    Flowline.getUser().then(user=>{ if (user) loadSavedEntry(loadId); });
+  }
+});
 </script>
 </body>
 </html>

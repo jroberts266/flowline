@@ -55,13 +55,17 @@ function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&
 const TOOL_LABELS = {
   vsm:'Value Stream Map', 'future-vsm':'Future-State VSM', a3:'A3 Report', dmaic:'DMAIC Charter',
   'kaizen-charter':'Kaizen Event Charter', fishbone:'Fishbone Diagram', '5why':'5 Whys Analysis',
-  yamazumi:'Yamazumi Chart', kpi:'KPI Dashboard'
+  yamazumi:'Yamazumi Chart', kpi:'KPI Dashboard', pareto:'Pareto Chart', capability:'Process Capability',
+  oee:'OEE Calculation', takt:'Takt Time Calculation', '5s':'5S Audit', kanban:'Kanban Board',
+  hourly:'Hour-by-Hour Board'
 };
 const TOOL_PAGE = {
   vsm:'flowline-vsm.html', 'future-vsm':'flowline-future-vsm.html', a3:'flowline-a3.html',
   dmaic:'flowline-dmaic.html', 'kaizen-charter':'flowline-kaizen-charter.html',
   fishbone:'flowline-fishbone.html', '5why':'flowline-5why.html', yamazumi:'flowline-yamazumi.html',
-  kpi:'flowline-kpi.html'
+  kpi:'flowline-kpi.html', pareto:'flowline-pareto.html', capability:'flowline-capability.html',
+  oee:'flowline-oee.html', takt:'flowline-takt.html', '5s':'flowline-5s.html', kanban:'flowline-kanban.html',
+  hourly:'flowline-hourly.html'
 };
 
 async function render(){

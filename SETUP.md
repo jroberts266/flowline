@@ -133,18 +133,14 @@ environment variable (redeploy after updating it).
 
 ---
 
-## What's wired up right now vs. what's a pattern to copy
+## What's wired up right now
 
 **Fully wired:** sign up/in, subscription status, Stripe checkout and
-billing portal, and save/load on the **Value Stream Mapper** as the
-working example.
-
-**Not yet wired, but same pattern:** save/load on the other 13 tools. Each
-one just needs the same four pieces the VSM got — a "Save to my account"
-button, a "My saved X" panel, a load-from-`?load=` handler, and a call to
-`Flowline.saveItem('toolname', title, state)`. Once you've confirmed the
-VSM version works end to end, tell me and I'll roll the same pattern out to
-the rest.
+billing portal, and save/load on **every tool** — Value Stream Mapper,
+Future-State VSM, A3, DMAIC Charter, Kaizen Event Charter, Fishbone, 5 Whys,
+Pareto, Process Capability, OEE, Takt Time, Yamazumi, 5S Audit, Kanban, KPI
+Dashboard, and Hour-by-Hour Board. Each has a "Save to my account" button, a
+"My saved items" panel, and reopens correctly from the account page's list.
 
 **A decision you still need to make:** right now every tool is fully usable
 for free, and only *saving to an account* is behind sign-up (not even
