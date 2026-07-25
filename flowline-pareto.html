@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Pareto Chart Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  #chart-holder{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px; }
+  .vital-note{ font-size:12px; color:var(--ink-soft); margin-top:12px; padding:10px 14px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:var(--accent-pull-soft);color:var(--accent-pull);">Analysis &amp; Quality</span>
+    <h1>Pareto Chart Generator</h1>
+    <p>Enter your issue categories and counts — bars sort themselves and the cumulative line shows you the vital few.</p>
+  </div>
+  <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Categories</h2>
+      <div id="cat-list"></div>
+      <button class="btn-ghost add-row-btn" type="button" id="btn-add">+ Add category</button>
+    </div>
+  </aside>
+  <main class="canvas-wrap">
+    <div id="chart-holder"></div>
+    <div class="vital-note" id="vital-note"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+let rows = [
+  {label:'Missing dimension', count:42},
+  {label:'Surface scratch', count:27},
+  {label:'Wrong color', count:15},
+  {label:'Late delivery', count:9},
+  {label:'Packaging damage', count:5},
+  {label:'Other', count:3}
+];
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderList(){
+  const wrap = document.getElementById('cat-list');
+  wrap.innerHTML = '';
+  rows.forEach((r,i)=>{
+    const row = document.createElement('div'); row.className='dyn-row';
+    row.innerHTML = `<input type="text" value="${esc(r.label)}" placeholder="Category"><input type="number" value="${r.count}" min="0" style="max-width:90px;"><button class="btn-mini" type="button">✕</button>`;
+    const inputs = row.querySelectorAll('input');
+    inputs[0].oninput = e=>{ r.label=e.target.value; renderChart(); };
+    inputs[1].oninput = e=>{ r.count=parseFloat(e.target.value)||0; renderChart(); };
+    row.querySelector('button').onclick = ()=>{ rows.splice(i,1); renderList(); renderChart(); };
+    wrap.appendChild(row);
+  });
+}
+document.getElementById('btn-add').onclick = ()=>{ rows.push({label:'',count:0}); renderList(); renderChart(); };
+
+function renderChart(){
+  const holder = document.getElementById('chart-holder');
+  const data = rows.filter(r=>r.label.trim() && r.count>0).sort((a,b)=> b.count-a.count);
+  if (data.length===0){ holder.innerHTML = '<div class="empty-note">Add at least one category with a count above zero.</div>'; document.getElementById('vital-note').textContent=''; return; }
+
+  const total = data.reduce((s,r)=>s+r.count,0);
+  let cum=0;
+  const cumPct = data.map(r=>{ cum+=r.count; return cum/total*100; });
+
+  const W = 760, H = 380, padL=50, padR=50, padT=20, padB=70;
+  const barAreaW = W-padL-padR;
+  const n = data.length;
+  const barW = Math.min(70, barAreaW/n*0.65);
+  const gap = barAreaW/n;
+  const maxCount = Math.max(...data.map(r=>r.count));
+
+  const yBar = v => (H-padB) - (v/maxCount)*(H-padT-padB);
+  const yPct = p => (H-padB) - (p/100)*(H-padT-padB);
+
+  let bars='', labels='', linePts=[], vitalCutIdx=-1;
+  data.forEach((r,i)=>{
+    const x = padL + gap*i + (gap-barW)/2;
+    const h = (H-padB) - yBar(r.count);
+    const color = cumPct[i] <= 80.0001 ? 'var(--accent-push)' : 'var(--ink-faint)';
+    if (cumPct[i] <= 80.0001) vitalCutIdx = i;
+    bars += `<rect x="${x}" y="${yBar(r.count)}" width="${barW}" height="${h}" fill="${color}"></rect>`;
+    bars += `<text x="${x+barW/2}" y="${yBar(r.count)-6}" font-size="11" text-anchor="middle" font-family="var(--mono)" fill="var(--ink)">${r.count}</text>`;
+    labels += `<text x="${x+barW/2}" y="${H-padB+16}" font-size="10.5" text-anchor="end" fill="var(--ink-soft)" transform="rotate(-35 ${x+barW/2} ${H-padB+16})">${esc(r.label)}</text>`;
+    linePts.push([x+barW/2, yPct(cumPct[i])]);
+  });
+  const linePath = 'M ' + linePts.map(p=>p.join(',')).join(' L ');
+  const dots = linePts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--accent-pull)"></circle><text x="${p[0]}" y="${p[1]-8}" font-size="9.5" text-anchor="middle" fill="var(--accent-pull)" font-family="var(--mono)">${cumPct[i].toFixed(0)}%</text>`).join('');
+  const eightyY = yPct(80);
+
+  holder.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;">
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--ink-faint)"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="var(--ink-faint)"/>
+    <line x1="${padL}" y1="${eightyY}" x2="${W-padR}" y2="${eightyY}" stroke="var(--accent-kaizen)" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="${W-padR}" y="${eightyY-4}" font-size="10" text-anchor="end" fill="var(--accent-kaizen-ink,#8a6b00)" font-family="var(--mono)">80%</text>
+    ${bars}
+    ${labels}
+    <path d="${linePath}" fill="none" stroke="var(--accent-pull)" stroke-width="1.8"/>
+    ${dots}
+  </svg>`;
+
+  document.getElementById('vital-note').innerHTML = vitalCutIdx>=0
+    ? `<b>Vital few:</b> the first ${vitalCutIdx+1} categor${vitalCutIdx+1===1?'y':'ies'} (${data.slice(0,vitalCutIdx+1).map(r=>r.label).join(', ')}) account for about ${cumPct[vitalCutIdx].toFixed(0)}% of the total — fixing these first gives the biggest return.`
+    : '';
+}
+
+renderList();
+renderChart();
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Glossary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .glossary-wrap{ max-width:820px; margin:0 auto; padding:28px 20px 60px; }
+  .search-box{ position:sticky; top:70px; background:var(--paper); padding:10px 0 16px; z-index:5; }
+  .search-box input{ font-size:15px; padding:12px 14px; }
+  .letter-heading{ font-family:var(--mono); font-size:13px; color:var(--accent-push); font-weight:700; margin:26px 0 8px; letter-spacing:.05em; }
+  .term{ padding:12px 0; border-bottom:1px solid var(--line); }
+  .term dt{ font-weight:700; font-size:14.5px; }
+  .term dt .also{ font-weight:400; font-size:11.5px; color:var(--ink-faint); margin-left:6px;}
+  .term dd{ margin:4px 0 0; font-size:13px; color:var(--ink-soft); line-height:1.6; }
+  .no-results{ text-align:center; color:var(--ink-faint); padding:40px 0; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);">Reference</span>
+    <h1>Lean &amp; Six Sigma Glossary</h1>
+    <p>Plain-English definitions for the terms used across these tools.</p>
+  </div>
+</div>
+
+<div class="glossary-wrap">
+  <div class="search-box"><input type="text" id="search" placeholder="Search terms…"></div>
+  <dl id="term-list"></dl>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+const TERMS = [
+  {t:"5S", d:"A workplace organization method: Sort, Set in Order, Shine, Standardize, Sustain — remove what's unneeded, give everything a place, keep it clean, and make that the new normal."},
+  {t:"A3", d:"A single-page report (named for the A3 paper size) that walks through a problem from background to root cause to countermeasures to results, all on one sheet."},
+  {t:"Andon", d:"A visual or audible signal (often a light) that alerts the team to a problem the moment it happens, so it can be fixed before it spreads."},
+  {t:"Bottleneck", d:"The slowest step in a process — the one that limits how much the whole line can produce, no matter how fast the other steps run."},
+  {t:"Changeover time (C/O)", d:"The time it takes to switch a process from making one product to making another."},
+  {t:"Cp / Cpk", d:"Statistical measures of whether a process's natural variation fits within its specification limits (Cp), and how well it's centered within them (Cpk)."},
+  {t:"Cycle time (C/T)", d:"The time it actually takes to complete one unit at a given process step, start to finish."},
+  {t:"DMAIC", d:"The five-phase Six Sigma project structure: Define, Measure, Analyze, Improve, Control."},
+  {t:"FIFO (First In, First Out)", d:"A queue between two steps where units are processed in the exact order they arrive — no cutting the line."},
+  {t:"Fishbone / Ishikawa diagram", d:"A visual root-cause tool that branches possible causes off a central spine, usually grouped into categories like Man, Machine, Method, Material."},
+  {t:"Five Whys", d:"A simple root-cause technique: keep asking why about a problem, usually about five times, until you reach the underlying cause rather than a symptom."},
+  {t:"Gemba", d:"The real place — where the actual work happens (the shop floor, the warehouse, the desk). Going to gemba means observing the work directly instead of relying on reports."},
+  {t:"Heijunka", d:"Production leveling — smoothing out the mix and volume of what you make so the line runs at a steady, predictable pace instead of big swings."},
+  {t:"Kaizen", d:"Continuous improvement — small, incremental changes made regularly, often by the people doing the work, rather than big infrequent overhauls."},
+  {t:"Kanban", d:"A signal (often a card) that tells an upstream step exactly when and how much to produce, based on what's actually being consumed downstream."},
+  {t:"Lead time", d:"The total time from when a unit enters a process until it exits — including all the waiting, not just the active work."},
+  {t:"Muda", d:"Waste — any activity that consumes resources without adding value the customer would pay for."},
+  {t:"OEE (Overall Equipment Effectiveness)", d:"A single score combining Availability, Performance, and Quality to show how effectively equipment is actually being used."},
+  {t:"Pareto principle (80/20 rule)", d:"The observation that a small number of causes (roughly 20%) are usually responsible for most of the effect (roughly 80%) — used to prioritize what to fix first."},
+  {t:"Poka-yoke", d:"A mistake-proofing device or method that makes it physically impossible (or very obvious) to make a certain error."},
+  {t:"Process Cycle Efficiency (PCE)", d:"The ratio of value-added time to total lead time — a low PCE means most of the time in your process is waiting, not working."},
+  {t:"Pull system", d:"A production approach where nothing is made until a downstream step signals demand for it, as opposed to pushing based on a forecast."},
+  {t:"Push system", d:"A production approach where each step makes as much as it can based on a schedule or forecast, regardless of whether downstream is ready for it."},
+  {t:"Root cause", d:"The actual underlying reason a problem occurs, as opposed to a symptom or a superficial trigger."},
+  {t:"Sigma level", d:"A statistical way of expressing process capability in terms of defects per million opportunities — higher sigma means fewer defects."},
+  {t:"Six Sigma", d:"A data-driven methodology for reducing defects and variation in a process, aiming for near-perfect consistency."},
+  {t:"Standard work", d:"The current best-known, documented way of performing a task — the baseline everyone follows until it's improved."},
+  {t:"Supermarket (in VSM)", d:"A small, controlled inventory buffer between two process steps that lets downstream pull exactly what it needs, refilled only as it's consumed."},
+  {t:"Takt time", d:"The pace a process needs to run at to match customer demand — available working time divided by customer demand."},
+  {t:"Uptime", d:"The percentage of scheduled time a machine or process is actually available and running, as opposed to down for breakdowns or changeovers."},
+  {t:"Value stream map (VSM)", d:"A diagram of all the steps, material flow, and information flow required to bring a product or service to a customer — used to spot waste and bottlenecks."},
+  {t:"Value-added time", d:"The portion of total processing time that the customer would actually be willing to pay for — as opposed to waiting, inspection, or rework."},
+  {t:"WIP (Work In Process)", d:"Units that have started production but aren't finished yet — sitting between steps rather than in raw material or finished goods."},
+  {t:"Yamazumi chart", d:"A stacked bar chart showing each operator's work elements, used to compare workload against takt time and rebalance a line."}
+];
+
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function render(filter){
+  const wrap = document.getElementById('term-list');
+  const f = (filter||'').toLowerCase().trim();
+  const filtered = TERMS.filter(x=> !f || x.t.toLowerCase().includes(f) || x.d.toLowerCase().includes(f)).sort((a,b)=>a.t.localeCompare(b.t));
+  if (filtered.length===0){ wrap.innerHTML = '<div class="no-results">No terms match that search.</div>'; return; }
+  let html=''; let lastLetter='';
+  filtered.forEach(x=>{
+    const letter = x.t[0].toUpperCase();
+    if (letter!==lastLetter){ html += `<div class="letter-heading">${letter}</div>`; lastLetter=letter; }
+    html += `<div class="term"><dt>${esc(x.t)}</dt><dd>${esc(x.d)}</dd></div>`;
+  });
+  wrap.innerHTML = html;
+}
+document.getElementById('search').addEventListener('input', e=> render(e.target.value));
+render('');
+</script>
+</body>
+</html>

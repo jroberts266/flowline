@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — 5S Audit Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .cat-card{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px; margin-bottom:14px; }
+  .cat-card h3{ margin:0 0 4px; font-size:15px; }
+  .cat-card .desc{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
+  .q-row{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--grid); font-size:12.5px; gap:10px;}
+  .q-row:last-child{ border-bottom:none; }
+  .score-buttons{ display:flex; gap:4px; }
+  .score-buttons button{
+    width:26px;height:26px;border-radius:4px;border:1px solid var(--line); background:#fff; font-family:var(--mono); font-size:11px; color:var(--ink-soft);
+  }
+  .score-buttons button.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .cat-total{ text-align:right; font-family:var(--mono); font-weight:700; font-size:13px; margin-top:8px; }
+  .overall{ background:var(--ink); color:#fff; border-radius:8px; padding:22px; text-align:center; margin-bottom:20px; }
+  .overall .pct{ font-family:var(--mono); font-size:44px; font-weight:700; }
+  .overall .lbl{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; opacity:.75; }
+  .radar-holder{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:14px; margin-bottom:20px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);">Plan &amp; Manage</span>
+    <h1>5S Audit Scorecard</h1>
+    <p>Score each area 0–5 across the five categories. Add past audits to track your trend over time.</p>
+  </div>
+  <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Audit info</h2>
+      <div class="row2">
+        <div class="field"><label>Area name</label><input type="text" id="in-area" value="Assembly Cell 3"></div>
+        <div class="field"><label>Audit date</label><input type="date" id="in-date"></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Past audits (for trend)</h2>
+      <div id="history-list"></div>
+      <button class="btn-ghost add-row-btn" type="button" id="btn-save-audit">+ Save this audit to trend</button>
+    </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div class="overall">
+      <div class="pct" id="out-total">—</div>
+      <div class="lbl">overall 5S score</div>
+    </div>
+    <div class="radar-holder" id="trend-holder"></div>
+    <div id="categories"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+const CATS = [
+  { name:'Sort (Seiri)', desc:'Only what is needed is present in the work area.', qs:[
+    'Unnecessary items/tools are removed from the area',
+    'Red-tag or similar process is used for unclear items',
+    'Work surfaces are free of clutter'
+  ]},
+  { name:'Set in Order (Seiton)', desc:'A place for everything, and everything in its place.', qs:[
+    'Tools and materials have clearly labeled locations',
+    'Frequently used items are within easy reach',
+    'Floor markings/shadow boards are used where relevant'
+  ]},
+  { name:'Shine (Seiso)', desc:'The area is clean and inspection doubles as cleaning.', qs:[
+    'Work area and equipment are visibly clean',
+    'Cleaning responsibilities and schedule are clear',
+    'Leaks, spills, or debris are addressed promptly'
+  ]},
+  { name:'Standardize (Seiketsu)', desc:'Visual controls and standards keep the first 3S consistent.', qs:[
+    'Visual standards (photos, outlines) are posted and current',
+    'Checklists or standard work are visible and followed',
+    'Abnormalities are easy to spot at a glance'
+  ]},
+  { name:'Sustain (Shitsuke)', desc:'The discipline to keep it going without being told.', qs:[
+    'Regular 5S audits are actually happening',
+    'Staff can explain the 5S standards for their area',
+    'Improvement suggestions are tracked and acted on'
+  ]}
+];
+let scores = CATS.map(c=> c.qs.map(()=>3));
+let history = [];
+
+function renderCats(){
+  const wrap = document.getElementById('categories');
+  wrap.innerHTML = '';
+  CATS.forEach((cat,ci)=>{
+    const card = document.createElement('div'); card.className='cat-card';
+    let qHtml = cat.qs.map((q,qi)=>{
+      let btns='';
+      for(let s=0;s<=5;s++){
+        btns += `<button type="button" data-c="${ci}" data-q="${qi}" data-s="${s}" class="${scores[ci][qi]===s?'active':''}">${s}</button>`;
+      }
+      return `<div class="q-row"><span>${q}</span><div class="score-buttons">${btns}</div></div>`;
+    }).join('');
+    card.innerHTML = `<h3>${cat.name}</h3><div class="desc">${cat.desc}</div>${qHtml}<div class="cat-total" id="cat-total-${ci}"></div>`;
+    wrap.appendChild(card);
+  });
+  wrap.querySelectorAll('button[data-s]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const c = +btn.dataset.c, q = +btn.dataset.q, s = +btn.dataset.s;
+      scores[c][q] = s;
+      renderCats();
+      calcTotals();
+    });
+  });
+  calcTotals();
+}
+
+function calcTotals(){
+  let grand=0, grandMax=0;
+  CATS.forEach((cat,ci)=>{
+    const sum = scores[ci].reduce((a,b)=>a+b,0);
+    const max = cat.qs.length*5;
+    grand+=sum; grandMax+=max;
+    const el = document.getElementById(`cat-total-${ci}`);
+    if (el) el.textContent = `${sum} / ${max}`;
+  });
+  const pct = grandMax? (grand/grandMax*100):0;
+  document.getElementById('out-total').textContent = pct.toFixed(0)+'%';
+  drawTrend(pct);
+}
+
+function drawTrend(currentPct){
+  const holder = document.getElementById('trend-holder');
+  const points = [...history.map(h=>({date:h.date, pct:h.pct})), {date:document.getElementById('in-date').value||'current', pct:currentPct}];
+  const W=760,H=160,padL=40,padR=20,padT=16,padB=28;
+  const yScale = p => (H-padB) - (p/100)*(H-padT-padB);
+  const xScale = i => padL + (points.length<=1?0:(i/(points.length-1))*(W-padL-padR));
+  const path = 'M ' + points.map((p,i)=>`${xScale(i)},${yScale(p.pct)}`).join(' L ');
+  const dots = points.map((p,i)=>`<circle cx="${xScale(i)}" cy="${yScale(p.pct)}" r="3.5" fill="var(--accent-pull)"/><text x="${xScale(i)}" y="${yScale(p.pct)-8}" font-size="9.5" text-anchor="middle" font-family="var(--mono)" fill="var(--ink)">${p.pct.toFixed(0)}%</text><text x="${xScale(i)}" y="${H-padB+14}" font-size="9" text-anchor="middle" fill="var(--ink-soft)">${p.date}</text>`).join('');
+  holder.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%">
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--ink-faint)"/>
+    <path d="${path}" fill="none" stroke="var(--accent-pull)" stroke-width="2"/>
+    ${dots}
+  </svg>`;
+}
+
+function renderHistory(){
+  const wrap = document.getElementById('history-list');
+  wrap.innerHTML='';
+  if (history.length===0){ wrap.innerHTML = '<div class="empty-note">No saved audits yet.</div>'; return; }
+  history.forEach((h,i)=>{
+    const row = document.createElement('div'); row.className='dyn-row';
+    row.innerHTML = `<span style="flex:1;font-size:12px;">${h.date||'(no date)'} — ${h.pct.toFixed(0)}%</span><button class="btn-mini" type="button">✕</button>`;
+    row.querySelector('button').onclick = ()=>{ history.splice(i,1); renderHistory(); calcTotals(); };
+    wrap.appendChild(row);
+  });
+}
+
+document.getElementById('btn-save-audit').addEventListener('click', ()=>{
+  let grand=0, grandMax=0;
+  CATS.forEach((cat,ci)=>{ grand += scores[ci].reduce((a,b)=>a+b,0); grandMax += cat.qs.length*5; });
+  const pct = grandMax? grand/grandMax*100 : 0;
+  history.push({ date: document.getElementById('in-date').value || `Audit ${history.length+1}`, pct });
+  renderHistory();
+  calcTotals();
+});
+
+document.getElementById('in-date').addEventListener('input', calcTotals);
+document.getElementById('in-area').addEventListener('input', ()=>{});
+
+renderHistory();
+renderCats();
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Kaizen Event Charter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  main.canvas-wrap{ display:flex; justify-content:center; }
+  #charter-page{ background:var(--panel); width:1100px; max-width:100%; padding:26px 30px; border:1px solid var(--line); box-shadow:var(--shadow); border-radius:4px;}
+  .ch-header{ display:flex; justify-content:space-between; border-bottom:3px solid var(--ink); padding-bottom:10px; margin-bottom:14px; gap:20px;}
+  .ch-header h2{ font-family:var(--mono); font-size:20px; margin:0; }
+  .ch-header .meta{ font-size:11px; color:var(--ink-soft); font-family:var(--mono); text-align:right; line-height:1.6;}
+  .ch-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .box{ border:1.4px solid var(--ink); border-radius:2px; padding:10px 12px; }
+  .box h3{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin:0 0 8px; }
+  .box p{ font-size:12px; line-height:1.5; margin:0; white-space:pre-wrap; }
+  .box p.placeholder{ color:var(--ink-faint); }
+  .box.span2{ grid-column:1/-1; }
+  .agenda-table td{ font-size:11.5px; }
+  .metric-pill{ display:inline-flex; flex-direction:column; border:1px solid var(--line); border-radius:3px; padding:5px 9px; margin:0 6px 6px 0; min-width:90px;}
+  .metric-pill .l{ font-size:9px; text-transform:uppercase; color:var(--ink-soft); font-family:var(--mono); }
+  .metric-pill .v{ font-size:13px; font-weight:700; font-family:var(--mono); }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);">Plan &amp; Manage</span>
+    <h1>Kaizen Event Charter</h1>
+    <p>Scope and schedule a focused rapid-improvement event — the plan a team walks into day one with.</p>
+  </div>
+  <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Event info</h2>
+      <div class="field"><label>Event name</label><input type="text" id="f-title" value="Assembly Cell Kaizen Event"></div>
+      <div class="row2">
+        <div class="field"><label>Start date</label><input type="date" id="f-start"></div>
+        <div class="field"><label>End date</label><input type="date" id="f-end"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Sponsor</label><input type="text" id="f-sponsor"></div>
+        <div class="field"><label>Facilitator</label><input type="text" id="f-facilitator"></div>
+      </div>
+      <div class="field"><label>Team members</label><input type="text" id="f-team"></div>
+    </div>
+
+    <div class="section">
+      <h2>Problem &amp; scope</h2>
+      <div class="field"><label>Problem / opportunity</label><textarea id="f-problem"></textarea></div>
+      <div class="row2">
+        <div class="field"><label>In scope</label><textarea id="f-inscope"></textarea></div>
+        <div class="field"><label>Out of scope</label><textarea id="f-outscope"></textarea></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Target metrics</h2>
+      <div id="metrics-list"></div>
+      <button class="btn-ghost add-row-btn" type="button" id="btn-add-metric">+ Add metric</button>
+    </div>
+
+    <div class="section">
+      <h2>5-day agenda</h2>
+      <div id="agenda-list"></div>
+    </div>
+
+    <div class="section">
+      <h2>Success criteria</h2>
+      <div class="field"><textarea id="f-success"></textarea></div>
+    </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div id="charter-page"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function val(id){ return document.getElementById(id).value; }
+function p(text){ return `<p class="${text&&text.trim()?'':'placeholder'}">${esc(text)||'—'}</p>`; }
+
+let metrics = [ {label:'Lead time', baseline:'', target:'', unit:'days'} ];
+let agenda = [
+  {day:'Day 1', focus:'Train the team, walk the gemba, map current state'},
+  {day:'Day 2', focus:'Root cause analysis, identify countermeasures'},
+  {day:'Day 3', focus:'Implement quick-win changes, test'},
+  {day:'Day 4', focus:'Refine, build new standard work'},
+  {day:'Day 5', focus:'Confirm results, report out, celebrate'}
+];
+
+function renderMetricsEditor(){
+  const wrap = document.getElementById('metrics-list');
+  wrap.innerHTML='';
+  metrics.forEach((m,i)=>{
+    const row = document.createElement('div'); row.className='dyn-row';
+    row.innerHTML = `<input type="text" placeholder="Metric" value="${esc(m.label)}"><input type="text" placeholder="Baseline" value="${esc(m.baseline)}" style="max-width:70px;"><input type="text" placeholder="Target" value="${esc(m.target)}" style="max-width:70px;"><button class="btn-mini" type="button">✕</button>`;
+    const inputs = row.querySelectorAll('input');
+    inputs[0].oninput = e=>{ m.label=e.target.value; render(); };
+    inputs[1].oninput = e=>{ m.baseline=e.target.value; render(); };
+    inputs[2].oninput = e=>{ m.target=e.target.value; render(); };
+    row.querySelector('button').onclick = ()=>{ metrics.splice(i,1); renderMetricsEditor(); render(); };
+    wrap.appendChild(row);
+  });
+}
+document.getElementById('btn-add-metric').onclick = ()=>{ metrics.push({label:'',baseline:'',target:'',unit:''}); renderMetricsEditor(); render(); };
+
+function renderAgendaEditor(){
+  const wrap = document.getElementById('agenda-list');
+  wrap.innerHTML='';
+  agenda.forEach((a,i)=>{
+    const row = document.createElement('div'); row.className='field';
+    row.innerHTML = `<label>${a.day}</label><input type="text" value="${esc(a.focus)}">`;
+    row.querySelector('input').oninput = e=>{ a.focus=e.target.value; render(); };
+    wrap.appendChild(row);
+  });
+}
+
+function render(){
+  const page = document.getElementById('charter-page');
+  const metricRows = metrics.filter(m=>m.label.trim()).map(m=>`<div class="metric-pill"><span class="l">${esc(m.label)}</span><span class="v">${esc(m.baseline)||'—'} → ${esc(m.target)||'—'}</span></div>`).join('') || '<div class="empty-note">No metrics yet.</div>';
+  const agendaRows = agenda.map(a=>`<tr><td style="font-weight:700;">${a.day}</td><td>${esc(a.focus)||'—'}</td></tr>`).join('');
+
+  page.innerHTML = `
+    <div class="ch-header">
+      <h2>${esc(val('f-title'))||'Untitled Kaizen Event'}</h2>
+      <div class="meta">${esc(val('f-start'))||'—'} → ${esc(val('f-end'))||'—'}<br>SPONSOR: ${esc(val('f-sponsor'))||'—'}<br>FACILITATOR: ${esc(val('f-facilitator'))||'—'}</div>
+    </div>
+    <div class="ch-grid">
+      <div class="box span2"><h3>Problem / Opportunity</h3>${p(val('f-problem'))}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+          <div><b style="font-size:11px;">In scope</b>${p(val('f-inscope'))}</div>
+          <div><b style="font-size:11px;">Out of scope</b>${p(val('f-outscope'))}</div>
+        </div>
+      </div>
+      <div class="box"><h3>Target Metrics</h3><div style="display:flex;flex-wrap:wrap;">${metricRows}</div></div>
+      <div class="box"><h3>Team</h3>${p(val('f-team'))}</div>
+      <div class="box span2"><h3>5-Day Agenda</h3><table class="mini-table agenda-table">${agendaRows}</table></div>
+      <div class="box span2"><h3>Success Criteria</h3>${p(val('f-success'))}</div>
+    </div>
+  `;
+}
+document.querySelectorAll('input, textarea').forEach(el=> el.addEventListener('input', render));
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+renderMetricsEditor();
+renderAgendaEditor();
+render();
+</script>
+</body>
+</html>

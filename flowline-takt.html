@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Takt Time Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .calc-wrap{ max-width:640px; margin:0 auto; padding:36px 20px; }
+  .result-card{
+    background:var(--panel); border:1.4px solid var(--ink); border-radius:6px; padding:24px; margin-top:22px; text-align:center;
+  }
+  .result-card .big{ font-family:var(--mono); font-size:42px; font-weight:700; color:var(--ink); }
+  .result-card .sub{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+  .explain{ font-size:12.5px; color:var(--ink-soft); line-height:1.7; margin-top:18px; padding:14px 16px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); }
+  .compare{ margin-top:18px; padding:16px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); }
+  .compare .row{ display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
+  .verdict{ font-weight:700; margin-top:8px; padding:8px 10px; border-radius:var(--radius); font-size:12.5px; }
+  .verdict.good{ background:var(--accent-pull-soft); color:var(--accent-pull); }
+  .verdict.warn{ background:var(--accent-push-soft); color:var(--accent-push); }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:var(--accent-push-soft);color:var(--accent-push);">Mapping &amp; Flow</span>
+    <h1>Takt Time Calculator</h1>
+    <p>The pace your process needs to run at to match customer demand — no diagram required.</p>
+  </div>
+</div>
+
+<div class="calc-wrap">
+  <div class="section">
+    <h2>Inputs</h2>
+    <div class="row2">
+      <div class="field"><label>Customer demand (units / period)</label><input type="number" id="in-demand" value="460" min="1"></div>
+      <div class="field"><label>Period</label>
+        <select id="in-period"><option value="1">Per day</option><option value="5">Per week (5 days)</option><option value="20">Per month (20 days)</option></select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Minutes per shift</label><input type="number" id="in-shift-min" value="460" min="1"></div>
+      <div class="field"><label>Shifts per day</label><input type="number" id="in-shifts" value="1" min="1"></div>
+    </div>
+    <div class="field"><label>Planned downtime per shift (minutes)</label><input type="number" id="in-downtime" value="0" min="0"></div>
+    <div class="field"><label>Your current process cycle time (sec) — optional, for comparison</label><input type="number" id="in-ct" value="" min="0" placeholder="e.g. 52"></div>
+  </div>
+
+  <div class="result-card">
+    <div class="big" id="out-takt">—</div>
+    <div class="sub">takt time (time available per unit of demand)</div>
+  </div>
+
+  <div class="compare" id="compare-wrap" style="display:none;">
+    <div class="row"><span>Takt time</span><span id="cmp-takt"></span></div>
+    <div class="row"><span>Your cycle time</span><span id="cmp-ct"></span></div>
+    <div class="verdict" id="cmp-verdict"></div>
+  </div>
+
+  <div class="explain">
+    <b>Takt time</b> = available working time ÷ customer demand. It's the rhythm your process needs to hit — not a target for any single station, but the pace the whole line needs to keep up with so you neither over- nor under-produce.
+    If your cycle time is above takt, you can't keep up with demand. If it's well below, you likely have idle capacity or excess staffing on that step.
+  </div>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+function fmtSeconds(s){
+  if (s==null||isNaN(s)) return '—';
+  if (s < 90) return Math.round(s*10)/10 + 's';
+  const m = s/60;
+  if (m < 90) return (Math.round(m*10)/10) + 'm';
+  return (Math.round(m/60*100)/100) + 'h';
+}
+function calc(){
+  const demand = parseFloat(document.getElementById('in-demand').value)||0;
+  const periods = parseFloat(document.getElementById('in-period').value)||1;
+  const shiftMin = parseFloat(document.getElementById('in-shift-min').value)||0;
+  const shifts = parseFloat(document.getElementById('in-shifts').value)||1;
+  const downtime = parseFloat(document.getElementById('in-downtime').value)||0;
+  const ct = parseFloat(document.getElementById('in-ct').value);
+
+  const availMinPerDay = Math.max(0, shiftMin - downtime) * shifts;
+  const availSecTotal = availMinPerDay * 60 * periods;
+  const demandTotal = demand; // demand already entered for the chosen period base (per day/week/month), available scaled to match by periods
+  const takt = demandTotal>0 ? availSecTotal/demandTotal : null;
+
+  document.getElementById('out-takt').textContent = takt ? fmtSeconds(takt)+'/unit' : '—';
+
+  const wrap = document.getElementById('compare-wrap');
+  if (!isNaN(ct) && ct>0 && takt){
+    wrap.style.display='block';
+    document.getElementById('cmp-takt').textContent = fmtSeconds(takt);
+    document.getElementById('cmp-ct').textContent = fmtSeconds(ct);
+    const v = document.getElementById('cmp-verdict');
+    if (ct > takt){
+      v.className='verdict warn';
+      v.textContent = `Your cycle time is ${fmtSeconds(ct-takt)} slower than takt — this step can't keep up with demand as specified.`;
+    } else {
+      v.className='verdict good';
+      v.textContent = `Your cycle time is ${fmtSeconds(takt-ct)} faster than takt — this step can keep up, with some slack.`;
+    }
+  } else {
+    wrap.style.display='none';
+  }
+}
+document.querySelectorAll('#in-demand,#in-period,#in-shift-min,#in-shifts,#in-downtime,#in-ct').forEach(el=> el.addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>

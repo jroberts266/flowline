@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Ishikawa / Fishbone Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  #fish-holder{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:14px; overflow:auto; }
+  .cat-block{ border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; margin-bottom:8px; }
+  .cat-block h4{ margin:0 0 6px; font-size:12px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.05em; color:var(--accent-push); }
+  .canvas-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:var(--accent-pull-soft);color:var(--accent-pull);">Analysis &amp; Quality</span>
+    <h1>Ishikawa / Fishbone Builder</h1>
+    <p>Lay out potential causes across the classic 6M categories and watch the diagram draw itself.</p>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Problem (the fish head)</h2>
+      <div class="field"><input type="text" id="in-problem" value="Late shipments to customer"></div>
+    </div>
+    <div class="section">
+      <h2>Categories &amp; causes</h2>
+      <div id="cat-editor"></div>
+    </div>
+  </aside>
+  <main class="canvas-wrap">
+    <div class="canvas-toolbar">
+      <div class="title" style="font-family:var(--mono);font-size:12px;color:var(--ink-soft);">FISHBONE DIAGRAM</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+        <button class="btn-ghost no-print" id="btn-download-svg">Download as SVG</button>
+      </div>
+    </div>
+    <div id="fish-holder"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+let problem = 'Late shipments to customer';
+let categories = {
+  'Man': ['Insufficient training', 'Absenteeism'],
+  'Machine': ['Frequent breakdowns'],
+  'Method': ['No standard work'],
+  'Material': ['Supplier delays'],
+  'Measurement': [],
+  'Environment': []
+};
+const CAT_ORDER = ['Man','Machine','Method','Material','Measurement','Environment'];
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+document.getElementById('in-problem').addEventListener('input', e=>{ problem = e.target.value; renderFish(); });
+
+function renderEditor(){
+  const wrap = document.getElementById('cat-editor');
+  wrap.innerHTML = '';
+  CAT_ORDER.forEach(cat=>{
+    const block = document.createElement('div'); block.className='cat-block';
+    block.innerHTML = `<h4>${cat}</h4><div class="items"></div><button class="btn-mini" type="button">+ add cause</button>`;
+    const itemsWrap = block.querySelector('.items');
+    categories[cat].forEach((item,i)=>{
+      const row = document.createElement('div'); row.className='dyn-row';
+      row.innerHTML = `<input type="text" value="${esc(item)}"><button class="btn-mini" type="button">✕</button>`;
+      row.querySelector('input').oninput = e=>{ categories[cat][i]=e.target.value; renderFish(); };
+      row.querySelector('button').onclick = ()=>{ categories[cat].splice(i,1); renderEditor(); renderFish(); };
+      itemsWrap.appendChild(row);
+    });
+    block.querySelector(':scope > button').onclick = ()=>{ categories[cat].push(''); renderEditor(); renderFish(); };
+    wrap.appendChild(block);
+  });
+}
+
+function renderFish(){
+  const holder = document.getElementById('fish-holder');
+  const W = 1000, H = 560;
+  const spineY = H/2;
+  const spineStartX = 90, spineEndX = W-160;
+
+  const top = CAT_ORDER.slice(0,3);
+  const bottom = CAT_ORDER.slice(3,6);
+
+  function boneGroup(cats, isTop){
+    let svg = '';
+    const n = cats.length;
+    cats.forEach((cat,i)=>{
+      const items = categories[cat].filter(x=>x.trim());
+      const boneX2 = spineStartX + (spineEndX-spineStartX) * ((i+1)/(n+0.3));
+      const boneX1 = boneX2 - 200;
+      const boneY2 = spineY;
+      const boneY1 = isTop ? spineY - 150 : spineY + 150;
+      svg += `<line x1="${boneX1}" y1="${boneY1}" x2="${boneX2}" y2="${boneY2}" stroke="var(--ink)" stroke-width="2"/>`;
+      const labelY = isTop ? boneY1 - 8 : boneY1 + 18;
+      svg += `<text x="${boneX1}" y="${labelY}" font-size="13" font-weight="700" font-family="var(--mono)" fill="var(--accent-push)">${esc(cat)}</text>`;
+      items.forEach((item,j)=>{
+        const t = (j+1)/(items.length+1);
+        const bx = boneX1 + (boneX2-boneX1)*t*0.75;
+        const by = boneY1 + (boneY2-boneY1)*t*0.75;
+        const twigLen = 34;
+        const tx = bx, ty = isTop ? by - twigLen : by + twigLen;
+        svg += `<line x1="${bx}" y1="${by}" x2="${tx}" y2="${ty}" stroke="var(--ink-soft)" stroke-width="1.3"/>`;
+        svg += `<text x="${tx+4}" y="${isTop? ty-2: ty+10}" font-size="10.5" fill="var(--ink)">${esc(item)}</text>`;
+      });
+    });
+    return svg;
+  }
+
+  const svg = `
+  <svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;">
+    <line x1="${spineStartX}" y1="${spineY}" x2="${spineEndX}" y2="${spineY}" stroke="var(--ink)" stroke-width="3"/>
+    <polygon points="${spineStartX},${spineY-14} ${spineStartX},${spineY+14} ${spineStartX-30},${spineY}" fill="var(--ink)"/>
+    ${boneGroup(top, true)}
+    ${boneGroup(bottom, false)}
+    <rect x="${spineEndX}" y="${spineY-40}" width="150" height="80" fill="var(--accent-push-soft)" stroke="var(--accent-push)" stroke-width="1.6" rx="3"/>
+    <foreignObject x="${spineEndX+6}" y="${spineY-34}" width="138" height="68">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Inter,sans-serif;font-size:12px;font-weight:700;color:#1B2A4A;line-height:1.3;display:flex;align-items:center;height:100%;">${esc(problem)}</div>
+    </foreignObject>
+  </svg>`;
+  holder.innerHTML = svg;
+}
+
+document.getElementById('btn-download-svg').addEventListener('click', ()=>{
+  const svgEl = document.querySelector('#fish-holder svg');
+  if (!svgEl) return;
+  const clone = svgEl.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const src = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([src], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='fishbone-diagram.svg';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+renderEditor();
+renderFish();
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+</script>
+</body>
+</html>

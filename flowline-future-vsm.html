@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Future-State VSM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .gap-strip{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
+  .gap-card{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:12px 16px; min-width:150px; }
+  .gap-card .l{ font-family:var(--mono); font-size:9.5px; text-transform:uppercase; color:var(--ink-soft); letter-spacing:.06em;}
+  .gap-card .row{ display:flex; align-items:baseline; gap:8px; margin-top:4px;}
+  .gap-card .before{ font-family:var(--mono); font-size:13px; color:var(--ink-faint); text-decoration:line-through; }
+  .gap-card .after{ font-family:var(--mono); font-size:19px; font-weight:700; color:var(--accent-pull); }
+  .gap-card .delta{ font-size:10.5px; font-family:var(--mono); color:var(--accent-push); }
+  #vsm-holder{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px; overflow:auto; margin-bottom:16px; }
+  .state-label{ font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-soft); margin:16px 0 6px; }
+  .step-card{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:9px 12px; margin-bottom:8px;}
+  .step-card .name{ font-weight:600; font-size:12.5px; }
+  .step-card .future-row{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px; }
+  .step-card .future-row label{ font-size:9.5px; color:var(--ink-soft); display:block; margin-bottom:2px;}
+  .step-card .future-row input, .step-card .future-row select{ font-size:11.5px; padding:5px 6px; }
+  .elim-toggle{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ink-soft); margin-top:6px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:var(--accent-push-soft);color:var(--accent-push);">Mapping &amp; Flow</span>
+    <h1>Future-State VSM</h1>
+    <p>Start from a current-state map, set targets per step, and see the gap before you commit to it.</p>
+  </div>
+  <div class="stat-row no-print">
+    <button class="btn-ghost" id="btn-import">Import current-state (.json)</button>
+    <input type="file" id="file-import" accept="application/json" style="display:none;">
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Customer demand</h2>
+      <div class="row2">
+        <div class="field"><label>Daily demand (units)</label><input type="number" id="in-demand" value="460"></div>
+        <div class="field"><label>Minutes / shift</label><input type="number" id="in-shift-min" value="460"></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Process steps</h2>
+      <div class="hint" style="margin-bottom:8px;">Import a current-state map, or add steps manually — then set future-state targets for each.</div>
+      <div id="step-list"></div>
+      <button class="btn-primary" id="btn-add-step" type="button">+ Add process step</button>
+    </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div class="gap-strip" id="gap-strip"></div>
+    <div class="state-label">Current state</div>
+    <div id="vsm-holder-current"></div>
+    <div class="state-label">Future state</div>
+    <div id="vsm-holder-future"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+let state = {
+  demand: 460, shiftMinutes: 460,
+  steps: [
+    { id:1, name:'Stamping', ct:39, inv:4600, flow:'push', fCt:39, fInv:1200, fFlow:'pull', eliminate:false },
+    { id:2, name:'Welding', ct:46, inv:1200, flow:'push', fCt:40, fInv:400, fFlow:'fifo', eliminate:false },
+    { id:3, name:'Assembly', ct:62, inv:1600, flow:'pull', fCt:55, fInv:400, fFlow:'pull', eliminate:false },
+    { id:4, name:'Shipping', ct:40, inv:900, flow:'push', fCt:40, fInv:300, fFlow:'push', eliminate:false }
+  ]
+};
+let nextId = 5;
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function invDays(units){ const d = Math.max(1, parseFloat(document.getElementById('in-demand').value)||1); return units/d; }
+function fmtDays(d){ if (d<1) return (d*24).toFixed(1)+' hr'; return d.toFixed(1)+' d'; }
+function fmtSec(s){ if (s<90) return Math.round(s)+'s'; return (s/60).toFixed(1)+'m'; }
+
+function renderStepList(){
+  const wrap = document.getElementById('step-list');
+  wrap.innerHTML='';
+  if (state.steps.length===0){ wrap.innerHTML='<div class="empty-note">No steps yet.</div>'; return; }
+  state.steps.forEach((s,i)=>{
+    const card = document.createElement('div'); card.className='step-card';
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;">
+        <input type="text" value="${esc(s.name)}" style="font-weight:600;font-size:12.5px;border:none;background:transparent;padding:0;flex:1;">
+        <button class="btn-mini" type="button">✕</button>
+      </div>
+      <div style="font-size:10.5px;color:var(--ink-faint);margin-top:2px;">CURRENT: C/T ${s.ct}s · WIP ${s.inv} · ${s.flow}</div>
+      <div class="future-row">
+        <div><label>Future C/T (s)</label><input type="number" value="${s.fCt}"></div>
+        <div><label>Future WIP</label><input type="number" value="${s.fInv}"></div>
+        <div><label>Future flow</label><select>
+          <option value="push" ${s.fFlow==='push'?'selected':''}>Push</option>
+          <option value="pull" ${s.fFlow==='pull'?'selected':''}>Pull</option>
+          <option value="fifo" ${s.fFlow==='fifo'?'selected':''}>FIFO</option>
+        </select></div>
+      </div>
+      <label class="elim-toggle"><input type="checkbox" ${s.eliminate?'checked':''}> Eliminate this step in future state</label>
+    `;
+    card.querySelector('input[type=text]').oninput = e=>{ s.name=e.target.value; renderAll(); };
+    card.querySelector('.btn-mini').onclick = ()=>{ state.steps.splice(i,1); renderAll(); };
+    const futInputs = card.querySelectorAll('.future-row input');
+    futInputs[0].oninput = e=>{ s.fCt=parseFloat(e.target.value)||0; renderAll(); };
+    futInputs[1].oninput = e=>{ s.fInv=parseFloat(e.target.value)||0; renderAll(); };
+    card.querySelector('.future-row select').onchange = e=>{ s.fFlow=e.target.value; renderAll(); };
+    card.querySelector('.elim-toggle input').onchange = e=>{ s.eliminate=e.target.checked; renderAll(); };
+    wrap.appendChild(card);
+  });
+}
+document.getElementById('btn-add-step').onclick = ()=>{
+  state.steps.push({id:nextId++, name:'New step', ct:30, inv:0, flow:'push', fCt:30, fInv:0, fFlow:'push', eliminate:false});
+  renderAll();
+};
+
+function drawMiniVsm(holderId, steps, ctKey, invKey, flowKey){
+  const holder = document.getElementById(holderId);
+  if (steps.length===0){ holder.innerHTML='<div class="empty-note">No steps.</div>'; return; }
+  const PROC_W=140, PROC_H=60, GAP=80, Y=30;
+  const W = 60 + steps.length*(PROC_W+GAP), H=140;
+  let x=40; let svgInner='';
+  const centers=[];
+  steps.forEach((s,i)=>{
+    centers.push(x);
+    svgInner += `<rect x="${x}" y="${Y}" width="${PROC_W}" height="${PROC_H}" fill="#fff" stroke="var(--ink)" stroke-width="1.4" rx="2"/>`;
+    svgInner += `<text x="${x+PROC_W/2}" y="${Y+22}" font-size="12" font-weight="600" text-anchor="middle" fill="var(--ink)">${esc(s.name)}</text>`;
+    svgInner += `<text x="${x+PROC_W/2}" y="${Y+40}" font-size="10.5" font-family="var(--mono)" text-anchor="middle" fill="var(--ink-soft)">C/T ${s[ctKey]}s</text>`;
+    x += PROC_W+GAP;
+  });
+  for (let i=0;i<steps.length-1;i++){
+    const x1 = centers[i]+PROC_W, x2 = centers[i+1], y = Y+PROC_H/2;
+    const flow = steps[i+1][flowKey];
+    const inv = steps[i+1][invKey];
+    const color = flow==='pull' ? 'var(--accent-pull)' : flow==='fifo' ? 'var(--purple)' : 'var(--accent-push)';
+    svgInner += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="2.2" marker-end="url(#arrow-${holderId})"/>`;
+    svgInner += `<text x="${(x1+x2)/2}" y="${y-10}" font-size="9.5" font-family="var(--mono)" text-anchor="middle" fill="${color}">${flow} · ${inv}u</text>`;
+  }
+  holder.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;">
+    <defs><marker id="arrow-${holderId}" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--ink)"/></marker></defs>
+    ${svgInner}
+  </svg>`;
+}
+
+function calcMetrics(steps, ctKey, invKey){
+  const demand = Math.max(1, parseFloat(document.getElementById('in-demand').value)||1);
+  const shiftMin = parseFloat(document.getElementById('in-shift-min').value)||0;
+  const takt = (shiftMin*60)/demand;
+  let leadDays=0, vaSec=0;
+  steps.forEach(s=>{ leadDays += s[invKey]/demand; vaSec += s[ctKey]; });
+  const pce = leadDays>0 ? (vaSec/(leadDays*86400)*100) : 0;
+  return { takt, leadDays, vaSec, pce, headcount: steps.length };
+}
+
+function renderGapStrip(){
+  const currentSteps = state.steps;
+  const futureSteps = state.steps.filter(s=>!s.eliminate);
+  const cm = calcMetrics(currentSteps, 'ct', 'inv');
+  const fm = calcMetrics(futureSteps, 'fCt', 'fInv');
+
+  function card(label, before, after, unit, lowerIsBetter){
+    const improved = lowerIsBetter ? after < before : after > before;
+    const delta = after - before;
+    return `<div class="gap-card">
+      <div class="l">${label}</div>
+      <div class="row"><span class="before">${before}</span><span class="after">${after}${unit}</span></div>
+      <div class="delta" style="color:${improved?'var(--accent-pull)':'var(--accent-push)'}">${delta>0?'+':''}${delta.toFixed(1)}${unit}</div>
+    </div>`;
+  }
+  document.getElementById('gap-strip').innerHTML =
+    card('Lead time (days)', cm.leadDays.toFixed(1), fm.leadDays.toFixed(1), '', true) +
+    card('Process cycle efficiency', cm.pce.toFixed(1), fm.pce.toFixed(1), '%', false) +
+    card('Process steps', cm.headcount, fm.headcount, '', true);
+}
+
+function renderAll(){
+  renderStepList();
+  drawMiniVsm('vsm-holder-current', state.steps, 'ct', 'inv', 'flow');
+  drawMiniVsm('vsm-holder-future', state.steps.filter(s=>!s.eliminate), 'fCt', 'fInv', 'fFlow');
+  renderGapStrip();
+}
+
+document.getElementById('in-demand').addEventListener('input', renderAll);
+document.getElementById('in-shift-min').addEventListener('input', renderAll);
+
+document.getElementById('btn-import').addEventListener('click', ()=> document.getElementById('file-import').click());
+document.getElementById('file-import').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if (data.source!=='flowline-vsm' || !data.state){ alert('This file does not look like a Flowline VSM export.'); return; }
+      const vs = data.state;
+      document.getElementById('in-demand').value = vs.demand;
+      document.getElementById('in-shift-min').value = vs.shiftMinutes;
+      state.steps = vs.steps.map((s,i)=>({
+        id:i+1, name:s.name, ct:s.ct, inv:s.inv, flow:s.flow,
+        fCt:s.ct, fInv:s.inv, fFlow:s.flow, eliminate:false
+      }));
+      nextId = state.steps.length+1;
+      renderAll();
+    }catch(err){ alert('Could not read that file: '+err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+
+renderAll();
+</script>
+</body>
+</html>

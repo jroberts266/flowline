@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Value Stream Mapper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAFAF7;
+    --panel:#FFFFFF;
+    --ink:#1B2A4A;
+    --ink-soft:#5A6B8C;
+    --ink-faint:#9AA6BE;
+    --line:#DCDFCE;
+    --grid:#E7E9DC;
+    --accent-kaizen:#F2B705;
+    --accent-kaizen-ink:#5C4400;
+    --accent-push:#D6602C;
+    --accent-pull:#2F6F6B;
+    --accent-pull-soft:#E4F0EE;
+    --accent-push-soft:#FBE9DF;
+    --danger:#B0301F;
+    --radius:3px;
+    --shadow:0 1px 2px rgba(27,42,74,0.06), 0 4px 14px rgba(27,42,74,0.05);
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    --sans:'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--sans);
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  ::selection{ background:var(--accent-kaizen); color:var(--ink); }
+
+  /* ---------- Header ---------- */
+  header.app-header{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:24px; flex-wrap:wrap;
+    padding:22px 28px 16px;
+    border-bottom:2px solid var(--ink);
+    background:rgba(255,255,255,0.6);
+  }
+  .brand{ display:flex; align-items:baseline; gap:12px; }
+  .brand .mark{
+    font-family:var(--mono); font-weight:700; font-size:13px;
+    letter-spacing:.14em; color:var(--panel); background:var(--ink);
+    padding:5px 8px; border-radius:2px;
+  }
+  .brand h1{
+    font-family:var(--mono); font-size:22px; font-weight:600; margin:0;
+    letter-spacing:-0.01em;
+  }
+  .brand p{ margin:2px 0 0; font-size:12.5px; color:var(--ink-soft); max-width:480px; }
+
+  .takt-readout{
+    display:flex; gap:18px; align-items:stretch; flex-wrap:wrap;
+  }
+  .stat{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:8px 14px; min-width:112px; box-shadow:var(--shadow);
+  }
+  .stat label{ display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-faint); font-weight:600;}
+  .stat .val{ font-family:var(--mono); font-size:19px; font-weight:600; color:var(--ink); }
+  .stat .val small{ font-size:11px; color:var(--ink-soft); font-weight:500;}
+  .stat.warn .val{ color:var(--accent-push); }
+  .stat.good .val{ color:var(--accent-pull); }
+
+  /* ---------- Layout ---------- */
+  .layout{ display:grid; grid-template-columns:340px 1fr; min-height:calc(100vh - 92px); }
+  @media (max-width:880px){ .layout{ grid-template-columns:1fr; } }
+
+  /* ---------- Sidebar ---------- */
+  aside.panel{
+    border-right:1px solid var(--line);
+    padding:20px; overflow-y:auto; max-height:calc(100vh - 92px);
+    background:rgba(255,255,255,0.35);
+  }
+  .section{ margin-bottom:22px; }
+  .section h2{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--ink-soft); margin:0 0 10px; display:flex; align-items:center; gap:8px;
+  }
+  .section h2::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .field{ margin-bottom:10px; }
+  .field label{ display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px; font-weight:500;}
+  .field .hint{ font-size:10.5px; color:var(--ink-faint); margin-top:3px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  input[type=text], input[type=number], select{
+    width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:var(--radius);
+    font-family:var(--sans); font-size:13px; background:var(--panel); color:var(--ink);
+  }
+  input:focus, select:focus, button:focus-visible{
+    outline:2px solid var(--ink); outline-offset:1px;
+  }
+  .toggle{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin-top:6px; cursor:pointer; }
+  .toggle input{ accent-color:var(--ink); width:14px; height:14px; }
+
+  button{ cursor:pointer; font-family:var(--sans); border:none; }
+  .btn-primary{
+    width:100%; padding:9px 12px; background:var(--ink); color:#fff; border-radius:var(--radius);
+    font-size:12.5px; font-weight:600; letter-spacing:.02em; margin-top:4px;
+  }
+  .btn-primary:hover{ background:#0f1a30; }
+  .btn-ghost{
+    padding:6px 10px; background:transparent; border:1px solid var(--line); border-radius:var(--radius);
+    font-size:11.5px; color:var(--ink-soft);
+  }
+  .btn-ghost:hover{ border-color:var(--ink); color:var(--ink); }
+  .btn-mini{ padding:3px 6px; font-size:11px; background:var(--panel); border:1px solid var(--line); border-radius:2px; color:var(--ink-soft); line-height:1;}
+  .btn-mini:hover{ color:var(--ink); border-color:var(--ink);}
+
+  .step-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:10px 12px; margin-bottom:8px; box-shadow:var(--shadow);
+  }
+  .step-card .top{ display:flex; justify-content:space-between; align-items:center; gap:6px; }
+  .step-card .name{ font-weight:600; font-size:13px; }
+  .step-card .meta{ font-family:var(--mono); font-size:10.5px; color:var(--ink-soft); margin-top:4px; }
+  .step-card .actions{ display:flex; gap:4px; }
+  .flow-tag{
+    display:inline-block; font-size:9.5px; font-family:var(--mono); text-transform:uppercase;
+    padding:1px 6px; border-radius:8px; margin-top:6px; letter-spacing:.04em;
+  }
+  .flow-tag.push{ background:var(--accent-push-soft); color:var(--accent-push); }
+  .flow-tag.pull{ background:var(--accent-pull-soft); color:var(--accent-pull); }
+  .flow-tag.fifo{ background:#EDEBF7; color:#5B4EA6; }
+
+  .empty-note{ font-size:12px; color:var(--ink-faint); padding:14px 10px; border:1px dashed var(--line); border-radius:var(--radius); text-align:center; }
+
+  .kaizen-item{ display:flex; gap:6px; align-items:flex-start; background:#FFFBEE; border:1px solid #EEDD9C; border-radius:var(--radius); padding:8px 10px; margin-bottom:6px; font-size:12px;}
+  .kaizen-item .x{ margin-left:auto; }
+
+  /* ---------- Canvas ---------- */
+  main.canvas-wrap{ overflow:auto; padding:24px; }
+  .canvas-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
+  .canvas-toolbar .title{ font-family:var(--mono); font-size:12px; color:var(--ink-soft); }
+  #vsm-svg-holder{
+    background:var(--panel); border:1px solid var(--line); border-radius:6px; box-shadow:var(--shadow);
+    padding:10px; overflow:auto;
+  }
+  svg text{ font-family:var(--sans); }
+  .mono-text{ font-family:var(--mono); }
+
+  .legend{
+    display:flex; flex-wrap:wrap; gap:14px; margin-top:14px; padding:12px 16px;
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); font-size:11px; color:var(--ink-soft);
+  }
+  .legend .item{ display:flex; align-items:center; gap:6px; }
+  .legend svg{ display:block; }
+
+  footer.credit{ text-align:center; font-size:11px; color:var(--ink-faint); padding:18px; }
+
+  @media (prefers-reduced-motion: no-preference){
+    .step-card, .stat{ transition:transform .12s ease; }
+  }
+</style>
+<link rel="stylesheet" href="flowline.css">
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html">
+    <span class="mark">FL</span>
+    <span class="name">Flowline</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group">
+            <h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<header class="app-header">
+  <div class="brand">
+    <span class="mark">VSM</span>
+    <div>
+      <h1>Flowline</h1>
+      <p>Build a value stream map from real process data — no drawing tools required. Enter your steps on the left; the map updates as you go.</p>
+    </div>
+  </div>
+  <div class="takt-readout">
+    <div class="stat">
+      <label>Takt time</label>
+      <div class="val" id="stat-takt">—</div>
+    </div>
+    <div class="stat">
+      <label>Total lead time</label>
+      <div class="val" id="stat-leadtime">—</div>
+    </div>
+    <div class="stat">
+      <label>Value-added time</label>
+      <div class="val" id="stat-vatime">—</div>
+    </div>
+    <div class="stat" id="stat-pce-wrap">
+      <label>Process cycle efficiency</label>
+      <div class="val" id="stat-pce">—</div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="panel">
+
+    <div class="section">
+      <h2>Customer demand</h2>
+      <div class="row2">
+        <div class="field">
+          <label for="in-demand">Daily demand (units)</label>
+          <input type="number" id="in-demand" value="460" min="1">
+        </div>
+        <div class="field">
+          <label for="in-customer-name">Customer name</label>
+          <input type="text" id="in-customer-name" value="Customer">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="in-shift-min">Minutes / shift</label>
+          <input type="number" id="in-shift-min" value="460" min="1">
+        </div>
+        <div class="field">
+          <label for="in-shifts">Shifts / day</label>
+          <input type="number" id="in-shifts" value="1" min="1">
+        </div>
+      </div>
+      <div class="field">
+        <label for="in-customer-freq">Shipment to customer</label>
+        <input type="text" id="in-customer-freq" value="Daily truck">
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Supplier</h2>
+      <div class="field">
+        <label for="in-supplier-name">Supplier name</label>
+        <input type="text" id="in-supplier-name" value="Supplier">
+      </div>
+      <div class="field">
+        <label for="in-supplier-freq">Shipment from supplier</label>
+        <input type="text" id="in-supplier-freq" value="Weekly truck">
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Production control</h2>
+      <div class="field">
+        <label for="in-prodcontrol-name">Control point name</label>
+        <input type="text" id="in-prodcontrol-name" value="Production Control">
+      </div>
+      <div class="hint" style="margin-bottom:6px;">Check which steps receive a schedule directly from production control (drawn as an information arrow).</div>
+    </div>
+
+    <div class="section">
+      <h2>Process steps</h2>
+      <div id="step-list"></div>
+      <button class="btn-primary" id="btn-add-step" type="button">+ Add process step</button>
+    </div>
+
+    <div class="section">
+      <h2>Kaizen bursts</h2>
+      <div id="kaizen-list"></div>
+      <button class="btn-ghost" id="btn-add-kaizen" type="button" style="width:100%;">+ Add improvement idea</button>
+    </div>
+
+  </aside>
+
+  <main class="canvas-wrap">
+    <div class="canvas-toolbar">
+      <div class="title">CURRENT-STATE MAP · not to scale</div>
+      <button class="btn-ghost" id="btn-download-svg" type="button">Download map as SVG</button>
+      <button class="btn-ghost" id="btn-download-json" type="button">Export data (.json)</button>
+    </div>
+    <div id="vsm-svg-holder"></div>
+
+    <div class="legend" id="legend"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — a guided value stream mapping tool. Data stays in this browser tab.</footer>
+
+<!-- ===================== Step editor dialog (lightweight, inline) ===================== -->
+<template id="tpl-step-fields"></template>
+
+<script>
+/* ============================================================================
+   STATE
+============================================================================ */
+let state = {
+  demand: 460,
+  shiftMinutes: 460,
+  shifts: 1,
+  customerName: 'Customer',
+  customerFreq: 'Daily truck',
+  supplierName: 'Supplier',
+  supplierFreq: 'Weekly truck',
+  prodControlName: 'Production Control',
+  steps: [
+    { id: 1, name: 'Stamping', ct: 39, co: 30, uptime: 85, operators: 1, inv: 4600, flow: 'push', scheduled: true, scrap: 2, customFields: [] },
+    { id: 2, name: 'Welding',  ct: 46, co: 10, uptime: 100, operators: 2, inv: 1200, flow: 'push', scheduled: false, scrap: 0, customFields: [] },
+    { id: 3, name: 'Assembly', ct: 62, co: 0,  uptime: 95,  operators: 3, inv: 1600, flow: 'pull', scheduled: true, scrap: 1.5, customFields: [{label:'Shift pattern', value:'2x8hr'}] },
+    { id: 4, name: 'Shipping', ct: 40, co: 0,  uptime: 100, operators: 1, inv: 900,  flow: 'push', scheduled: true, scrap: 0, customFields: [] }
+  ],
+  kaizen: [
+    { id: 1, stepId: 1, text: 'Reduce changeover from 30 to 10 min' }
+  ]
+};
+let nextStepId = 5;
+let nextKaizenId = 2;
+
+/* ============================================================================
+   HELPERS
+============================================================================ */
+function fmtSeconds(s){
+  if (s == null || isNaN(s)) return '—';
+  if (s < 90) return Math.round(s) + 's';
+  const m = s/60;
+  if (m < 90) return (Math.round(m*10)/10) + 'm';
+  return (Math.round(m/60*10)/10) + 'h';
+}
+function fmtDays(d){
+  if (d == null || isNaN(d)) return '—';
+  if (d < 1) return Math.round(d*24*10)/10 + ' hr';
+  return (Math.round(d*10)/10) + ' d';
+}
+function invDays(units){
+  const demand = Math.max(1, num('in-demand'));
+  return units / demand;
+}
+function num(id){ return parseFloat(document.getElementById(id).value) || 0; }
+function txt(id){ return document.getElementById(id).value.trim(); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ============================================================================
+   COMPUTED METRICS
+============================================================================ */
+function computeMetrics(){
+  const availableSec = num('in-shift-min') * 60 * num('in-shifts');
+  const demand = Math.max(1, num('in-demand'));
+  const takt = availableSec / demand;
+
+  let totalLeadDays = 0;
+  let totalVASec = 0;
+  state.steps.forEach(s=>{
+    totalLeadDays += invDays(s.inv);
+    totalVASec += s.ct;
+  });
+  const totalLeadSec = totalLeadDays * 86400;
+  const pce = totalLeadSec > 0 ? (totalVASec/totalLeadSec*100) : 0;
+
+  return { takt, totalLeadDays, totalVASec, pce, availableSec, demand };
+}
+
+function renderStats(){
+  const m = computeMetrics();
+  document.getElementById('stat-takt').innerHTML = fmtSeconds(m.takt) + ' <small>/unit</small>';
+  document.getElementById('stat-leadtime').textContent = fmtDays(m.totalLeadDays);
+  document.getElementById('stat-vatime').textContent = fmtSeconds(m.totalVASec);
+  document.getElementById('stat-pce').textContent = (m.pce < 100 ? m.pce.toFixed(2) : m.pce.toFixed(0)) + '%';
+
+  const bottleneck = state.steps.reduce((max,s)=> s.ct > (max?max.ct:-1) ? s : max, null);
+  const taktStat = document.getElementById('stat-takt').closest('.stat');
+  taktStat.classList.remove('warn');
+  if (bottleneck && bottleneck.ct > m.takt) taktStat.classList.add('warn');
+  const pceStat = document.getElementById('stat-pce-wrap');
+  pceStat.classList.remove('good','warn');
+  if (m.pce >= 15) pceStat.classList.add('good'); else if(m.pce>0) pceStat.classList.add('warn');
+}
+
+/* ============================================================================
+   SIDEBAR: STEP LIST
+============================================================================ */
+function renderStepList(){
+  const wrap = document.getElementById('step-list');
+  wrap.innerHTML = '';
+  if (state.steps.length === 0){
+    wrap.innerHTML = '<div class="empty-note">No process steps yet. Add your first one below.</div>';
+    return;
+  }
+  state.steps.forEach((s, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'step-card';
+    card.innerHTML = `
+      <div class="top">
+        <span class="name">${idx+1}. ${esc(s.name)||'Untitled step'}</span>
+        <span class="actions">
+          <button class="btn-mini" data-act="up" title="Move earlier">↑</button>
+          <button class="btn-mini" data-act="down" title="Move later">↓</button>
+          <button class="btn-mini" data-act="edit" title="Edit">✎</button>
+          <button class="btn-mini" data-act="del" title="Remove">✕</button>
+        </span>
+      </div>
+      <div class="meta">C/T ${s.ct}s · C/O ${s.co}m · UT ${s.uptime}% · ${s.operators} op · WIP ${s.inv}${s.scrap?` · Scrap ${s.scrap}%`:''}${(s.customFields&&s.customFields.length)?` · +${s.customFields.length} custom`:''}</div>
+      <span class="flow-tag ${s.flow}">${s.flow === 'pull' ? 'Supermarket pull' : s.flow === 'fifo' ? 'FIFO lane' : 'Push'}</span>
+    `;
+    card.querySelector('[data-act="up"]').onclick = ()=>{ if(idx>0){ [state.steps[idx-1],state.steps[idx]]=[state.steps[idx],state.steps[idx-1]]; renderAll(); } };
+    card.querySelector('[data-act="down"]').onclick = ()=>{ if(idx<state.steps.length-1){ [state.steps[idx+1],state.steps[idx]]=[state.steps[idx],state.steps[idx+1]]; renderAll(); } };
+    card.querySelector('[data-act="del"]').onclick = ()=>{ state.steps.splice(idx,1); state.kaizen = state.kaizen.filter(k=>k.stepId!==s.id); renderAll(); };
+    card.querySelector('[data-act="edit"]').onclick = ()=> openStepEditor(s);
+    wrap.appendChild(card);
+  });
+}
+
+function openStepEditor(step){
+  const isNew = !step;
+  const s = step || { id: nextStepId++, name:'', ct:30, co:0, uptime:100, operators:1, inv:0, flow:'push', scheduled:false, scrap:0, customFields:[] };
+  if (!s.customFields) s.customFields = [];
+  // work on a local copy of custom fields until saved, so cancel doesn't mutate
+  let draftFields = s.customFields.map(f=>({label:f.label, value:f.value}));
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(27,42,74,0.35);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:6px;padding:20px;width:380px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);font-size:13px;">
+      <h3 style="margin:0 0 14px;font-family:var(--mono);font-size:14px;">${isNew?'Add process step':'Edit process step'}</h3>
+      <div class="field"><label>Step name</label><input type="text" id="ed-name" value="${esc(s.name)}" placeholder="e.g. Assembly"></div>
+      <div class="row2">
+        <div class="field"><label>Cycle time (sec)</label><input type="number" id="ed-ct" value="${s.ct}" min="0"></div>
+        <div class="field"><label>Changeover (min)</label><input type="number" id="ed-co" value="${s.co}" min="0"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Uptime (%)</label><input type="number" id="ed-uptime" value="${s.uptime}" min="0" max="100"></div>
+        <div class="field"><label>Operators</label><input type="number" id="ed-operators" value="${s.operators}" min="0"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Inventory waiting (units)</label><input type="number" id="ed-inv" value="${s.inv}" min="0"></div>
+        <div class="field"><label>Scrap / defect rate (%)</label><input type="number" id="ed-scrap" value="${s.scrap||0}" min="0" max="100" step="0.1"></div>
+      </div>
+      <div class="field"><label>Flow into this step</label>
+        <select id="ed-flow">
+          <option value="push" ${s.flow==='push'?'selected':''}>Push (batch, unscheduled)</option>
+          <option value="pull" ${s.flow==='pull'?'selected':''}>Pull (supermarket)</option>
+          <option value="fifo" ${s.flow==='fifo'?'selected':''}>FIFO lane</option>
+        </select>
+      </div>
+      <label class="toggle"><input type="checkbox" id="ed-scheduled" ${s.scheduled?'checked':''}> Scheduled directly by production control</label>
+
+      <div class="section" style="margin-top:16px;margin-bottom:0;">
+        <h2 style="margin-bottom:8px;">Custom data</h2>
+        <div class="hint" style="margin:-4px 0 8px;">Add any other metric you want shown on this step's data box — e.g. first-pass yield, energy use, quality checks.</div>
+        <div id="ed-custom-list"></div>
+        <button class="btn-ghost" id="ed-add-field" type="button" style="width:100%;margin-top:2px;">+ Add custom field</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:18px;">
+        <button class="btn-primary" id="ed-save" style="margin-top:0;">Save step</button>
+        <button class="btn-ghost" id="ed-cancel">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  function renderDraftFields(){
+    const wrap = overlay.querySelector('#ed-custom-list');
+    wrap.innerHTML = '';
+    draftFields.forEach((f, i)=>{
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
+      row.innerHTML = `
+        <input type="text" placeholder="Label (e.g. Scrap)" value="${esc(f.label)}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:3px;font-size:12px;">
+        <input type="text" placeholder="Value (e.g. 2%)" value="${esc(f.value)}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:3px;font-size:12px;">
+        <button class="btn-mini" type="button" title="Remove">✕</button>
+      `;
+      const [labelInput, valueInput] = row.querySelectorAll('input');
+      labelInput.oninput = ()=> draftFields[i].label = labelInput.value;
+      valueInput.oninput = ()=> draftFields[i].value = valueInput.value;
+      row.querySelector('button').onclick = ()=>{ draftFields.splice(i,1); renderDraftFields(); };
+      wrap.appendChild(row);
+    });
+  }
+  renderDraftFields();
+  overlay.querySelector('#ed-add-field').onclick = ()=>{ draftFields.push({label:'', value:''}); renderDraftFields(); };
+
+  overlay.querySelector('#ed-cancel').onclick = ()=> overlay.remove();
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  overlay.querySelector('#ed-save').onclick = ()=>{
+    s.name = overlay.querySelector('#ed-name').value.trim() || 'Untitled step';
+    s.ct = parseFloat(overlay.querySelector('#ed-ct').value)||0;
+    s.co = parseFloat(overlay.querySelector('#ed-co').value)||0;
+    s.uptime = parseFloat(overlay.querySelector('#ed-uptime').value)||0;
+    s.operators = parseFloat(overlay.querySelector('#ed-operators').value)||0;
+    s.inv = parseFloat(overlay.querySelector('#ed-inv').value)||0;
+    s.scrap = parseFloat(overlay.querySelector('#ed-scrap').value)||0;
+    s.flow = overlay.querySelector('#ed-flow').value;
+    s.scheduled = overlay.querySelector('#ed-scheduled').checked;
+    s.customFields = draftFields.filter(f=> f.label.trim() || f.value.trim());
+    if (isNew) state.steps.push(s);
+    overlay.remove();
+    renderAll();
+  };
+}
+
+/* ============================================================================
+   SIDEBAR: KAIZEN LIST
+============================================================================ */
+function renderKaizenList(){
+  const wrap = document.getElementById('kaizen-list');
+  wrap.innerHTML = '';
+  if (state.kaizen.length === 0){
+    wrap.innerHTML = '<div class="empty-note">No improvement bursts yet.</div>';
+    return;
+  }
+  state.kaizen.forEach((k)=>{
+    const step = state.steps.find(s=>s.id===k.stepId);
+    const row = document.createElement('div');
+    row.className = 'kaizen-item';
+    row.innerHTML = `<span>⚡</span><span>${esc(k.text)} <em style="color:var(--ink-faint);font-style:normal;">— ${step?esc(step.name):'(step removed)'}</em></span><button class="btn-mini x" title="Remove">✕</button>`;
+    row.querySelector('.x').onclick = ()=>{ state.kaizen = state.kaizen.filter(x=>x.id!==k.id); renderAll(); };
+    wrap.appendChild(row);
+  });
+}
+
+function openKaizenEditor(){
+  if (state.steps.length === 0){ alert('Add a process step first.'); return; }
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(27,42,74,0.35);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:6px;padding:20px;width:340px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);font-size:13px;">
+      <h3 style="margin:0 0 14px;font-family:var(--mono);font-size:14px;">Add improvement idea</h3>
+      <div class="field"><label>Attach to step</label>
+        <select id="kz-step">${state.steps.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Idea</label><input type="text" id="kz-text" placeholder="e.g. Install quick-change dies"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn-primary" id="kz-save" style="margin-top:0;">Save</button>
+        <button class="btn-ghost" id="kz-cancel">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#kz-cancel').onclick = ()=> overlay.remove();
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  overlay.querySelector('#kz-save').onclick = ()=>{
+    const text = overlay.querySelector('#kz-text').value.trim();
+    if(!text) { overlay.remove(); return; }
+    state.kaizen.push({ id: nextKaizenId++, stepId: parseFloat(overlay.querySelector('#kz-step').value), text });
+    overlay.remove();
+    renderAll();
+  };
+}
+
+/* ============================================================================
+   SVG DIAGRAM BUILDING
+============================================================================ */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, children){
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  (children||[]).forEach(c=> el.appendChild(c));
+  return el;
+}
+function textEl(x,y,str,opts={}){
+  const t = svgEl('text', Object.assign({
+    x, y, fill: opts.color || 'var(--ink)', 'font-size': opts.size||11,
+    'font-weight': opts.weight||400, 'text-anchor': opts.anchor||'start',
+    'font-family': opts.mono ? "'IBM Plex Mono', monospace" : "'Inter', sans-serif"
+  }, opts.attrs||{}));
+  t.textContent = str;
+  return t;
+}
+
+const COLORS = {
+  ink:'#1B2A4A', inkSoft:'#5A6B8C', line:'#8A93AC',
+  push:'#D6602C', pull:'#2F6F6B', kaizen:'#F2B705', kaizenInk:'#5C4400',
+  panel:'#FFFFFF', dataBox:'#F3F1E7'
+};
+
+function buildDiagram(){
+  const holder = document.getElementById('vsm-svg-holder');
+  holder.innerHTML = '';
+
+  const steps = state.steps;
+  const PROC_W = 150, PROC_H = 74;
+  const maxRows = steps.length ? Math.max(...steps.map(s=> rowsForStep(s).length)) : 4;
+  const DATA_H = 22 + maxRows*15.5;
+  const GAP = 92;              // horizontal gap between process columns (for arrows/triangles)
+  const LEFT_MARGIN = 60;
+  const TOP_ROW_Y = 40;         // supplier/customer/prod control row
+  const PROC_Y = 230;           // process box y
+  const DATA_Y = PROC_Y + PROC_H + 14;
+  const LADDER_Y = DATA_Y + DATA_H + 90;
+  const hasKaizen = state.kaizen.length > 0;
+
+  const n = Math.max(steps.length, 1);
+  const width = LEFT_MARGIN*2 + PROC_W + (n)*(PROC_W+GAP) ;
+  const height = LADDER_Y + 150 + (hasKaizen ? 30 : 0);
+
+  const svg = svgEl('svg', {
+    viewBox: `0 0 ${width} ${height}`,
+    width: Math.min(width, 1600), height: height*Math.min(width,1600)/width,
+    xmlns: SVG_NS
+  });
+
+  // defs: arrow markers + push stripe pattern
+  const defs = svgEl('defs', {}, [
+    (()=>{ const m = svgEl('marker', {id:'arrow-ink', markerWidth:8, markerHeight:8, refX:6, refY:3, orient:'auto'}); m.appendChild(svgEl('path',{d:'M0,0 L6,3 L0,6 Z', fill:COLORS.ink})); return m; })(),
+    (()=>{ const m = svgEl('marker', {id:'arrow-thin', markerWidth:7, markerHeight:7, refX:5, refY:2.5, orient:'auto'}); m.appendChild(svgEl('path',{d:'M0,0 L5,2.5 L0,5 Z', fill:COLORS.inkSoft})); return m; })(),
+    (()=>{ const pat = svgEl('pattern', {id:'push-stripe', width:8, height:8, patternTransform:'rotate(45)', patternUnits:'userSpaceOnUse'});
+      pat.appendChild(svgEl('rect',{width:8,height:8,fill:COLORS.push, opacity:0.18}));
+      pat.appendChild(svgEl('line',{x1:0,y1:0,x2:0,y2:8,stroke:COLORS.push,'stroke-width':4})); return pat; })()
+  ]);
+  svg.appendChild(defs);
+
+  // ---- background title strip
+  svg.appendChild(textEl(LEFT_MARGIN, 20, 'INFORMATION FLOW', {size:9.5, weight:600, color:COLORS.inkSoft, attrs:{'letter-spacing':'0.12em'}}));
+  svg.appendChild(textEl(LEFT_MARGIN, PROC_Y-16, 'MATERIAL FLOW', {size:9.5, weight:600, color:COLORS.inkSoft, attrs:{'letter-spacing':'0.12em'}}));
+  svg.appendChild(textEl(LEFT_MARGIN, LADDER_Y-30, 'TIMELINE', {size:9.5, weight:600, color:COLORS.inkSoft, attrs:{'letter-spacing':'0.12em'}}));
+
+  /* ---------------- Production control (top center) ---------------- */
+  const pcX = width/2 - 90, pcY = TOP_ROW_Y, pcW = 180, pcH = 56;
+  svg.appendChild(processBoxIcon(pcX, pcY, pcW, pcH, state.prodControlName, true));
+
+  /* ---------------- Supplier & Customer (top corners) ---------------- */
+  const supX = LEFT_MARGIN, supY = TOP_ROW_Y+6, boxW=140, boxH=64;
+  svg.appendChild(processBoxIcon(supX, supY, boxW, boxH, state.supplierName, true));
+  const custX = width - LEFT_MARGIN - boxW, custY = TOP_ROW_Y+6;
+  svg.appendChild(processBoxIcon(custX, custY, boxW, boxH, state.customerName, true));
+
+  // info arrows: supplier -> prod control, customer -> prod control
+  svg.appendChild(dashedArrow(supX+boxW, supY+boxH/2, pcX, pcY+pcH/2, 'forecast', true));
+  svg.appendChild(dashedArrow(custX, custY+boxH/2, pcX+pcW, pcY+pcH/2, 'orders', true));
+
+  /* ---------------- Process boxes + data boxes ---------------- */
+  let x = LEFT_MARGIN;
+  const centers = [];
+  steps.forEach((s, i)=>{
+    const cx = x;
+    centers.push(cx);
+    svg.appendChild(processBoxIcon(cx, PROC_Y, PROC_W, PROC_H, s.name, false));
+    svg.appendChild(dataBox(cx, DATA_Y, PROC_W, DATA_H, s));
+
+    // info arrow down from production control if scheduled
+    if (s.scheduled){
+      const stepCenterX = cx + PROC_W/2;
+      svg.appendChild(dashedArrow(pcX + pcW*( (i+0.5)/steps.length ), pcY+pcH, stepCenterX, PROC_Y, 'schedule', true, true));
+    }
+
+    // kaizen bursts for this step
+    state.kaizen.filter(k=>k.stepId===s.id).forEach((k)=>{
+      svg.appendChild(kaizenBurst(cx+PROC_W/2, PROC_Y-52, k.text));
+      svg.appendChild(svgEl('line',{x1:cx+PROC_W/2, y1:PROC_Y-16, x2:cx+PROC_W/2, y2:PROC_Y, stroke:COLORS.kaizenInk, 'stroke-width':1, 'stroke-dasharray':'2,2'}));
+    });
+
+    x += PROC_W + GAP;
+  });
+
+  // material flow: supplier -> first step (truck)
+  if (steps.length){
+    svg.appendChild(shipmentArrow(supX+boxW/2, supY+boxH, centers[0]+PROC_W/2, PROC_Y, state.supplierFreq));
+  }
+  // between steps
+  for (let i=0;i<steps.length-1;i++){
+    const x1 = centers[i]+PROC_W, x2 = centers[i+1];
+    const y = PROC_Y + PROC_H/2;
+    const flow = steps[i+1].flow;
+    svg.appendChild(materialFlow(x1, x2, y, flow, steps[i+1].inv));
+  }
+  // last step -> customer (truck)
+  if (steps.length){
+    const last = centers[centers.length-1];
+    svg.appendChild(shipmentArrow(last+PROC_W/2, PROC_Y, custX+boxW/2, custY+boxH, state.customerFreq));
+  }
+
+  /* ---------------- Timeline ladder ---------------- */
+  svg.appendChild(timelineLadder(centers, PROC_W, LADDER_Y, steps));
+
+  holder.appendChild(svg);
+  renderLegend();
+}
+
+function processBoxIcon(x,y,w,h,label,isEdge){
+  const g = svgEl('g',{});
+  g.appendChild(svgEl('rect',{x,y,width:w,height:h,fill: isEdge? '#EFF1E9' : COLORS.panel, stroke:COLORS.ink,'stroke-width':1.4, rx:2}));
+  g.appendChild(textEl(x+w/2, y+h/2+4, label||'—', {size:12.5, weight:600, anchor:'middle'}));
+  return g;
+}
+
+function rowsForStep(s){
+  const rows = [
+    ['C/T', s.ct+' s'],
+    ['C/O', s.co+' min'],
+    ['Uptime', s.uptime+'%'],
+    ['Operators', String(s.operators)]
+  ];
+  if (s.scrap) rows.push(['Scrap', s.scrap+'%']);
+  (s.customFields||[]).forEach(f=>{ if(f.label.trim()||f.value.trim()) rows.push([f.label||'—', f.value||'—']); });
+  return rows;
+}
+
+function dataBox(x,y,w,h,s){
+  const g = svgEl('g',{});
+  g.appendChild(svgEl('rect',{x,y,width:w,height:h,fill:COLORS.dataBox, stroke:COLORS.ink,'stroke-width':1, rx:2}));
+  const rows = rowsForStep(s);
+  rows.forEach((r,i)=>{
+    const ry = y+16+i*15.5;
+    g.appendChild(textEl(x+8, ry, r[0], {size:9.5, color:COLORS.inkSoft, mono:true}));
+    g.appendChild(textEl(x+w-8, ry, r[1], {size:9.5, weight:600, anchor:'end', mono:true}));
+  });
+  return g;
+}
+
+function dashedArrow(x1,y1,x2,y2,label,thin,vertical){
+  const g = svgEl('g',{});
+  g.appendChild(svgEl('line',{x1,y1,x2,y2, stroke:COLORS.inkSoft, 'stroke-width':1.2, 'stroke-dasharray':'5,3', 'marker-end':'url(#arrow-thin)'}));
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  g.appendChild(textEl(mx, vertical? my-4 : my-6, label, {size:9, color:COLORS.inkSoft, anchor:'middle', mono:true}));
+  return g;
+}
+
+function shipmentArrow(x1,y1,x2,y2,label){
+  const g = svgEl('g',{});
+  g.appendChild(svgEl('line',{x1,y1,x2,y2, stroke:COLORS.ink, 'stroke-width':1.4, 'marker-end':'url(#arrow-ink)'}));
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  g.appendChild(svgEl('rect',{x:mx-30,y:my-10,width:60,height:16,fill:'#fff',stroke:COLORS.line}));
+  g.appendChild(textEl(mx, my+2, label, {size:8.5, anchor:'middle', mono:true, color:COLORS.inkSoft}));
+  return g;
+}
+
+function materialFlow(x1,x2,y,flow,invUnits){
+  const g = svgEl('g',{});
+  const midX = (x1+x2)/2;
+  if (flow === 'pull'){
+    // supermarket icon: 3 vertical bars in a box
+    const w=34,h=40, sx=midX-w/2, sy=y-h/2;
+    g.appendChild(svgEl('rect',{x:sx,y:sy,width:w,height:h,fill:'#fff',stroke:COLORS.pull,'stroke-width':1.4}));
+    [0,1,2].forEach(i=> g.appendChild(svgEl('line',{x1:sx+8+i*9, y1:sy+4, x2:sx+8+i*9, y2:sy+h-4, stroke:COLORS.pull, 'stroke-width':2})));
+    g.appendChild(textEl(midX, sy-6, invUnits+' u', {size:9, anchor:'middle', mono:true, color:COLORS.pull, weight:600}));
+    // pull arrow (curved, dashed, points backward from downstream)
+    g.appendChild(svgEl('path',{d:`M ${sx+w+4},${y+h/2+8} C ${x2-14},${y+30} ${x2-8},${y+10} ${x2-2},${y+4}`, fill:'none', stroke:COLORS.pull,'stroke-width':1.3,'stroke-dasharray':'1,3','marker-end':'url(#arrow-thin)'}));
+    g.appendChild(svgEl('line',{x1, y1:y, x2:sx, y2:y, stroke:COLORS.ink,'stroke-width':1.4}));
+    g.appendChild(svgEl('line',{x1:sx+w, y1:y, x2:x2-4, y2:y, stroke:COLORS.ink,'stroke-width':1.4,'marker-end':'url(#arrow-ink)'}));
+  } else if (flow === 'fifo'){
+    const w = x2-x1;
+    g.appendChild(svgEl('rect',{x:x1, y:y-11, width:w, height:22, fill:'#EDEBF7', stroke:'#5B4EA6','stroke-width':1.2}));
+    g.appendChild(svgEl('line',{x1:x1+6,y1:y-11,x2:x1+6,y2:y+11,stroke:'#5B4EA6','stroke-width':1}));
+    g.appendChild(textEl(midX, y+4, 'FIFO · max '+invUnits, {size:9, anchor:'middle', mono:true, color:'#5B4EA6', weight:600}));
+    g.appendChild(svgEl('path',{d:`M ${x2-14},${y-6} L ${x2-4},${y} L ${x2-14},${y+6}`, fill:'none', stroke:'#5B4EA6','stroke-width':1.4}));
+  } else {
+    // push: striped block arrow + triangle inventory marker above
+    const w = x2-x1, h=20;
+    const points = `${x1},${y-h/2} ${x1+w-14},${y-h/2} ${x1+w-14},${y-h/2-6} ${x2},${y} ${x1+w-14},${y+h/2+6} ${x1+w-14},${y+h/2} ${x1},${y+h/2}`;
+    g.appendChild(svgEl('polygon',{points, fill:'url(#push-stripe)', stroke:COLORS.push,'stroke-width':1.2}));
+    // inventory triangle
+    const tx = midX, ty = y - 34;
+    g.appendChild(svgEl('polygon',{points:`${tx-13},${ty+20} ${tx+13},${ty+20} ${tx},${ty}`, fill:'#FEF6EC', stroke:COLORS.push,'stroke-width':1.4}));
+    g.appendChild(textEl(tx, ty+15, 'I', {size:10, anchor:'middle', weight:700, color:COLORS.push}));
+    g.appendChild(textEl(tx, ty-6, invUnits+' units', {size:9, anchor:'middle', mono:true, color:COLORS.push, weight:600}));
+  }
+  return g;
+}
+
+function kaizenBurst(cx, cy, text){
+  const g = svgEl('g',{});
+  const spikes = 10, rOuter=30, rInner=22;
+  let pts = [];
+  for (let i=0;i<spikes*2;i++){
+    const r = i%2===0? rOuter: rInner;
+    const a = Math.PI*i/spikes - Math.PI/2;
+    pts.push(`${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`);
+  }
+  g.appendChild(svgEl('polygon',{points:pts.join(' '), fill:COLORS.kaizen, stroke:COLORS.kaizenInk,'stroke-width':1}));
+  const words = text.split(' ');
+  let lines=[]; let cur='';
+  words.forEach(w=>{ if((cur+' '+w).trim().length>14){ lines.push(cur.trim()); cur=w; } else cur+=' '+w; });
+  if(cur.trim()) lines.push(cur.trim());
+  lines = lines.slice(0,3);
+  lines.forEach((ln,i)=> g.appendChild(textEl(cx, cy-6+i*10, ln, {size:7.6, anchor:'middle', weight:700, color:COLORS.kaizenInk})));
+  return g;
+}
+
+function timelineLadder(centers, procW, ladderY, steps){
+  const g = svgEl('g',{});
+  const highY = ladderY, lowY = ladderY+42;
+  const segW = 110;
+  let cx = centers.length? centers[0]+procW/2 - (segW*steps.length)/2 : 60;
+  let startX = 60;
+  let px = startX;
+  g.appendChild(svgEl('line',{x1:startX, y1:lowY, x2:startX+segW*Math.max(steps.length,1)+ (steps.length? (centers[centers.length-1]-centers[0]) : 0), y2:lowY, stroke:COLORS.line,'stroke-width':1}));
+
+  let totalLead=0, totalVA=0;
+  steps.forEach((s,i)=>{
+    const days = invDays(s.inv);
+    totalLead += days; totalVA += s.ct;
+    const segX = centers[i] - 40;
+    const segX2 = segX + procW*0.9;
+    // up step (lead time)
+    g.appendChild(svgEl('path',{d:`M ${segX},${lowY} L ${segX},${highY} L ${segX2},${highY} L ${segX2},${lowY}`, fill:'none', stroke:COLORS.push,'stroke-width':2}));
+    g.appendChild(textEl((segX+segX2)/2, highY-8, fmtDays(days), {size:9.5, anchor:'middle', mono:true, weight:700, color:COLORS.push}));
+    // down box (process/value-added time) — mirrors the up box, but drops below baseline
+    const boxW = 22, belowY = lowY + 26;
+    g.appendChild(svgEl('path',{d:`M ${segX2},${lowY} L ${segX2},${belowY} L ${segX2+boxW},${belowY} L ${segX2+boxW},${lowY}`, fill:'none', stroke:COLORS.pull,'stroke-width':2}));
+    g.appendChild(textEl(segX2+boxW/2, belowY+14, fmtSeconds(s.ct), {size:9.5, mono:true, weight:700, color:COLORS.pull, anchor:'middle'}));
+  });
+
+  const lastX = centers.length ? centers[centers.length-1]+procW*0.9-40 : startX;
+  const combinedDays = totalLead + (totalVA/86400);
+  g.appendChild(textEl(startX, lowY+58, `Wait time (inventory): ${fmtDays(totalLead)}`, {size:11, weight:700, mono:true, color:COLORS.push}));
+  g.appendChild(textEl(startX+230, lowY+58, `Process time: ${fmtSeconds(totalVA)}`, {size:11, weight:700, mono:true, color:COLORS.pull}));
+  g.appendChild(svgEl('line',{x1:startX, y1:lowY+70, x2:startX+430, y2:lowY+70, stroke:COLORS.ink,'stroke-width':0.75}));
+  g.appendChild(textEl(startX, lowY+88, `Total production lead time: ${fmtDays(combinedDays)}`, {size:12.5, weight:700, mono:true, color:COLORS.ink}));
+  return g;
+}
+
+/* ---------------- Legend ---------------- */
+function renderLegend(){
+  const items = [
+    ['Process step', COLORS.ink, 'box'],
+    ['Data box', COLORS.dataBox, 'box'],
+    ['Push (unscheduled batch)', COLORS.push, 'swatch'],
+    ['Supermarket pull', COLORS.pull, 'swatch'],
+    ['FIFO lane, max qty', '#5B4EA6', 'swatch'],
+    ['Kaizen improvement burst', COLORS.kaizen, 'burst'],
+    ['Info / schedule flow', COLORS.inkSoft, 'dash']
+  ];
+  const el = document.getElementById('legend');
+  el.innerHTML = '';
+  items.forEach(([label,color,kind])=>{
+    const wrap = document.createElement('div'); wrap.className='item';
+    let swatch;
+    if (kind==='burst'){
+      swatch = `<svg width="16" height="16" viewBox="0 0 16 16"><polygon points="8,0 9.6,5.2 14.9,4 11.3,8 14.9,12 9.6,10.8 8,16 6.4,10.8 1.1,12 4.7,8 1.1,4 6.4,5.2" fill="${color}" stroke="${COLORS.kaizenInk}" stroke-width="0.5"/></svg>`;
+    } else if (kind==='dash'){
+      swatch = `<svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="${color}" stroke-width="1.4" stroke-dasharray="4,3"/></svg>`;
+    } else {
+      swatch = `<svg width="16" height="16"><rect width="16" height="16" fill="${color}" rx="2"/></svg>`;
+    }
+    wrap.innerHTML = swatch + `<span>${label}</span>`;
+    el.appendChild(wrap);
+  });
+}
+
+/* ============================================================================
+   RENDER ALL + WIRE UP
+============================================================================ */
+function renderAll(){
+  renderStepList();
+  renderKaizenList();
+  renderStats();
+  buildDiagram();
+}
+
+['in-demand','in-shift-min','in-shifts','in-customer-name','in-customer-freq','in-supplier-name','in-supplier-freq','in-prodcontrol-name']
+  .forEach(id=>{
+    document.getElementById(id).addEventListener('input', ()=>{
+      state.customerName = txt('in-customer-name');
+      state.customerFreq = txt('in-customer-freq');
+      state.supplierName = txt('in-supplier-name');
+      state.supplierFreq = txt('in-supplier-freq');
+      state.prodControlName = txt('in-prodcontrol-name');
+      renderAll();
+    });
+  });
+
+document.getElementById('btn-add-step').addEventListener('click', ()=> openStepEditor(null));
+document.getElementById('btn-add-kaizen').addEventListener('click', openKaizenEditor);
+
+document.getElementById('btn-download-svg').addEventListener('click', ()=>{
+  const svg = document.querySelector('#vsm-svg-holder svg');
+  if (!svg) return;
+  const clone = svg.cloneNode(true);
+  clone.setAttribute('xmlns', SVG_NS);
+  const src = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([src], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'value-stream-map.svg';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btn-download-json').addEventListener('click', ()=>{
+  const m = computeMetrics();
+  const payload = {
+    source: 'flowline-vsm',
+    exportedAt: new Date().toISOString(),
+    state: state,
+    metrics: {
+      taktTimeSec: m.takt,
+      totalLeadDays: m.totalLeadDays,
+      totalValueAddedSec: m.totalVASec,
+      processCycleEfficiencyPct: m.pce
+    }
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'flowline-vsm-data.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+// initial sync of state from default input values, then render
+state.customerName = txt('in-customer-name');
+state.customerFreq = txt('in-customer-freq');
+state.supplierName = txt('in-supplier-name');
+state.supplierFreq = txt('in-supplier-freq');
+state.prodControlName = txt('in-prodcontrol-name');
+renderAll();
+</script>
+<script src="flowline.js"></script>
+</body>
+</html>

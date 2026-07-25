@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Lean &amp; Six Sigma, made approachable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  a{ text-decoration:none; }
+  .hero{ max-width:900px; margin:0 auto; padding:64px 28px 36px; text-align:center; }
+  .hero .kicker{ font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent-push); display:inline-block; margin-bottom:14px; font-weight:700;}
+  .hero h1{ font-size:38px; line-height:1.15; margin:0 0 16px; letter-spacing:-0.02em; }
+  .hero p.sub{ font-size:15.5px; color:var(--ink-soft); max-width:620px; margin:0 auto 26px; line-height:1.6; }
+  .hero .cta-row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+  .cat-section{ max-width:1120px; margin:0 auto; padding:8px 28px 44px; }
+  .cat-section h2{ font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-soft); margin:0 0 16px; display:flex; align-items:center; gap:10px; }
+  .cat-section h2 .dot{ width:9px;height:9px;border-radius:50%; }
+  .cat-section h2::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .card-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  @media (max-width:900px){ .card-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:600px){ .card-grid{ grid-template-columns:1fr; } .hero h1{font-size:28px;} }
+
+  .tcard{
+    background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:18px;
+    box-shadow:var(--shadow); display:flex; flex-direction:column; gap:8px; color:var(--ink);
+  }
+  .tcard:hover{ border-color:var(--ink); }
+  .tcard h3{ font-size:14.5px; margin:0; font-family:var(--mono); }
+  .tcard p{ font-size:12px; color:var(--ink-soft); line-height:1.55; margin:0; flex:1; }
+  .tcard .go{ font-size:11.5px; font-weight:700; color:var(--ink); }
+
+  .btn-primary{ padding:12px 22px; background:var(--ink); color:#fff; border-radius:var(--radius); font-size:14px; font-weight:700; box-shadow:var(--shadow); }
+  .btn-primary:hover{ background:#0f1a30; }
+  .btn-secondary{ padding:12px 22px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:var(--radius); font-size:14px; font-weight:700; }
+  .btn-secondary:hover{ border-color:var(--ink); }
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="#tools">Tools</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <span class="kicker">Lean &amp; Six Sigma, without the drawing tools</span>
+  <h1>Turn your process data into the visuals your team actually needs.</h1>
+  <p class="sub">Flowline lowers the bar of entry for standard Lean and Six Sigma artifacts. Enter your data once — get a properly formatted diagram, chart, scorecard, or report back, built to the conventions your team already knows.</p>
+  <div class="cta-row">
+    <a class="btn-primary" href="flowline-vsm.html">Start a value stream map →</a>
+    <a class="btn-secondary" href="flowline-a3.html">Start an A3 report</a>
+  </div>
+</section>
+
+<section class="cat-section" id="tools">
+  <h2><span class="dot" style="background:var(--accent-push);"></span>Mapping &amp; Flow</h2>
+  <div class="card-grid">
+    <a class="tcard" href="flowline-vsm.html"><h3>Value Stream Mapper</h3><p>Build a full current-state VSM from your process step data — push/pull/FIFO, takt time, timeline ladder.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-future-vsm.html"><h3>Future-State VSM</h3><p>Set targets per step against your current state and see the lead-time and efficiency gap before you commit.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-yamazumi.html"><h3>Yamazumi Chart</h3><p>Stack each operator's work elements to see who's over takt and where to rebalance.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-takt.html"><h3>Takt Time Calculator</h3><p>Quick standalone takt time and demand math, with a cycle-time comparison.</p><span class="go">Open →</span></a>
+  </div>
+</section>
+
+<section class="cat-section">
+  <h2><span class="dot" style="background:var(--accent-pull);"></span>Analysis &amp; Quality</h2>
+  <div class="card-grid">
+    <a class="tcard" href="flowline-fishbone.html"><h3>Ishikawa / Fishbone Builder</h3><p>Lay out causes across the 6M categories and get a proper fishbone diagram, exportable as SVG.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-pareto.html"><h3>Pareto Chart Generator</h3><p>Enter issue counts, get a sorted bar chart with a cumulative line and the vital-few called out.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-capability.html"><h3>Process Capability Calculator</h3><p>Cp, Cpk, and sigma level from spec limits and process stats or raw sample data.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-oee.html"><h3>OEE Calculator</h3><p>Availability × Performance × Quality, broken down and benchmarked against world-class.</p><span class="go">Open →</span></a>
+  </div>
+</section>
+
+<section class="cat-section">
+  <h2><span class="dot" style="background:var(--ink-soft);"></span>Plan &amp; Manage</h2>
+  <div class="card-grid">
+    <a class="tcard" href="flowline-a3.html"><h3>A3 Problem Solving</h3><p>A guided 10-step problem-solving process that builds a printable A3 report as you go.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-dmaic.html"><h3>DMAIC Project Charter</h3><p>The standard Six Sigma project one-pager — Define, Measure, Analyze, Improve, Control.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-kaizen-charter.html"><h3>Kaizen Event Charter</h3><p>Scope and schedule a rapid-improvement event, with a ready-made 5-day agenda.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-5s.html"><h3>5S Audit Scorecard</h3><p>Score an area across the five categories and track your trend over repeat audits.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-kanban.html"><h3>Kanban Board</h3><p>A simple drag-and-drop visual work board for a cell or an improvement backlog.</p><span class="go">Open →</span></a>
+    <a class="tcard" href="flowline-glossary.html"><h3>Glossary</h3><p>Plain-English definitions for the Lean and Six Sigma terms used across these tools.</p><span class="go">Open →</span></a>
+  </div>
+</section>
+
+<footer class="credit">Flowline — data stays in your browser. Nothing is uploaded or stored on a server.</footer>
+
+<script src="flowline.js"></script>
+</body>
+</html>

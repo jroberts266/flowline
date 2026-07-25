@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — A3 Problem Solving</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAFAF7; --panel:#FFFFFF; --ink:#1B2A4A; --ink-soft:#5A6B8C; --ink-faint:#9AA6BE;
+    --line:#DCDFCE; --grid:#E7E9DC;
+    --accent-kaizen:#F2B705; --accent-push:#D6602C; --accent-pull:#2F6F6B;
+    --accent-pull-soft:#E4F0EE; --accent-push-soft:#FBE9DF;
+    --radius:3px; --shadow:0 1px 2px rgba(27,42,74,0.06), 0 4px 14px rgba(27,42,74,0.05);
+    --mono:'IBM Plex Mono', ui-monospace, monospace; --sans:'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--sans);
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--paper);
+    color:var(--ink); min-height:100vh;
+  }
+  ::selection{ background:var(--accent-kaizen); color:var(--ink); }
+
+  header.app-header{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap;
+    padding:22px 28px 16px; border-bottom:2px solid var(--ink); background:rgba(255,255,255,0.6);
+  }
+  .brand{ display:flex; align-items:baseline; gap:12px; }
+  .brand .mark{ font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:.14em; color:var(--panel); background:var(--ink); padding:5px 8px; border-radius:2px;}
+  .brand h1{ font-family:var(--mono); font-size:22px; font-weight:600; margin:0; letter-spacing:-0.01em;}
+  .brand p{ margin:2px 0 0; font-size:12.5px; color:var(--ink-soft); max-width:520px; }
+  .header-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+
+  button{ cursor:pointer; font-family:var(--sans); border:none; }
+  .btn-primary{ padding:9px 14px; background:var(--ink); color:#fff; border-radius:var(--radius); font-size:12.5px; font-weight:600;}
+  .btn-primary:hover{ background:#0f1a30; }
+  .btn-ghost{ padding:8px 12px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); font-size:12px; color:var(--ink-soft);}
+  .btn-ghost:hover{ border-color:var(--ink); color:var(--ink); }
+  .btn-mini{ padding:3px 7px; font-size:11px; background:var(--panel); border:1px solid var(--line); border-radius:2px; color:var(--ink-soft); line-height:1;}
+  .btn-mini:hover{ color:var(--ink); border-color:var(--ink);}
+  input[type=file]{ display:none; }
+
+  .layout{ display:grid; grid-template-columns:380px 1fr; min-height:calc(100vh - 92px); }
+  @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
+
+  aside.panel{ border-right:1px solid var(--line); padding:18px; overflow-y:auto; max-height:calc(100vh - 92px); background:rgba(255,255,255,0.35);}
+
+  .accordion-item{ border:1px solid var(--line); border-radius:var(--radius); margin-bottom:8px; background:var(--panel); overflow:hidden;}
+  .accordion-head{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer; user-select:none;
+  }
+  .accordion-head .num{
+    font-family:var(--mono); font-size:11px; font-weight:700; color:#fff; background:var(--ink);
+    width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .accordion-head .label{ font-size:13px; font-weight:600; flex:1; }
+  .accordion-head .chev{ font-size:11px; color:var(--ink-faint); transition:transform .15s; }
+  .accordion-item.open .chev{ transform:rotate(90deg); }
+  .accordion-body{ display:none; padding:4px 12px 14px; }
+  .accordion-item.open .accordion-body{ display:block; }
+
+  .field{ margin-bottom:10px; }
+  .field label{ display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px; font-weight:500;}
+  .field .hint{ font-size:10.5px; color:var(--ink-faint); margin-top:3px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  input[type=text], input[type=number], input[type=date], select, textarea{
+    width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:var(--radius);
+    font-family:var(--sans); font-size:12.5px; background:var(--panel); color:var(--ink); resize:vertical;
+  }
+  textarea{ min-height:56px; line-height:1.4; }
+  input:focus, textarea:focus, select:focus{ outline:2px solid var(--ink); outline-offset:1px; }
+
+  .dyn-row{ display:flex; gap:6px; margin-bottom:6px; align-items:flex-start; }
+  .dyn-row > *{ flex:1; }
+  .dyn-row .btn-mini{ flex:0 0 auto; margin-top:2px; }
+  .add-row-btn{ width:100%; margin-top:2px; }
+
+  .fishbone-cat{ margin-bottom:8px; }
+  .fishbone-cat > label{ font-size:11px; font-weight:700; color:var(--accent-push); text-transform:uppercase; letter-spacing:.04em; }
+
+  main.canvas-wrap{ overflow:auto; padding:24px; display:flex; justify-content:center; }
+  #a3-page{
+    background:var(--panel); width:1400px; max-width:100%; padding:26px 30px; border:1px solid var(--line);
+    box-shadow:var(--shadow); border-radius:4px;
+  }
+  .a3-header{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid var(--ink); padding-bottom:10px; margin-bottom:14px; gap:20px;}
+  .a3-header h2{ font-family:var(--mono); font-size:22px; margin:0; }
+  .a3-header .meta{ font-size:11px; color:var(--ink-soft); font-family:var(--mono); text-align:right; line-height:1.6; }
+  .a3-grid{ display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:min-content; gap:12px; }
+  .box{ border:1.4px solid var(--ink); border-radius:2px; padding:10px 12px; background:#fff; }
+  .box h3{
+    font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; margin:0 0 8px;
+    display:flex; align-items:center; gap:7px; color:var(--ink);
+  }
+  .box h3 .n{ background:var(--ink); color:#fff; width:17px; height:17px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:9.5px; }
+  .box p.narrative{ font-size:12px; line-height:1.5; margin:0 0 8px; white-space:pre-wrap; color:var(--ink); }
+  .box p.narrative:empty::before, .box p.narrative.placeholder::before{ content:'—'; color:var(--ink-faint); }
+  .mini-table{ width:100%; border-collapse:collapse; font-size:11px; }
+  .mini-table th{ text-align:left; font-family:var(--mono); font-size:9px; text-transform:uppercase; color:var(--ink-soft); border-bottom:1px solid var(--line); padding:3px 4px; }
+  .mini-table td{ padding:4px 4px; border-bottom:1px solid var(--grid); vertical-align:top; }
+  .metric-pill{ display:inline-flex; flex-direction:column; border:1px solid var(--line); border-radius:3px; padding:5px 9px; margin:0 6px 6px 0; min-width:88px;}
+  .metric-pill .l{ font-size:9px; text-transform:uppercase; color:var(--ink-soft); font-family:var(--mono); }
+  .metric-pill .v{ font-size:14px; font-weight:700; font-family:var(--mono); }
+  .whys-chain{ display:flex; flex-direction:column; gap:3px; margin-bottom:8px; }
+  .whys-chain .why-row{ display:flex; gap:6px; font-size:11.5px; align-items:baseline; }
+  .whys-chain .why-row .tag{ font-family:var(--mono); font-size:9.5px; color:var(--accent-push); font-weight:700; flex:0 0 44px; }
+  .fish-cats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:10.5px; }
+  .fish-cats .cat{ border:1px dashed var(--line); border-radius:2px; padding:4px 6px; }
+  .fish-cats .cat b{ display:block; font-size:9px; text-transform:uppercase; color:var(--accent-push); font-family:var(--mono); margin-bottom:2px;}
+  .status-chip{ font-size:9px; font-family:var(--mono); padding:1px 6px; border-radius:8px; text-transform:uppercase; }
+  .status-chip.notstarted{ background:#EEE; color:#666; }
+  .status-chip.inprogress{ background:var(--accent-push-soft); color:var(--accent-push); }
+  .status-chip.done{ background:var(--accent-pull-soft); color:var(--accent-pull); }
+  .compare-bar-wrap{ margin-bottom:6px; }
+  .compare-bar-label{ display:flex; justify-content:space-between; font-size:10px; font-family:var(--mono); color:var(--ink-soft); margin-bottom:2px;}
+  .compare-bar-track{ position:relative; height:14px; background:var(--grid); border-radius:2px; overflow:hidden;}
+  .compare-bar-fill{ position:absolute; top:0; left:0; height:100%; border-radius:2px;}
+  .checklist{ list-style:none; margin:0; padding:0; font-size:11.5px; }
+  .checklist li{ display:flex; gap:6px; padding:2px 0; align-items:flex-start;}
+  .checklist li .box-ck{ width:12px;height:12px;border:1.3px solid var(--ink); border-radius:2px; flex:0 0 auto; margin-top:2px;}
+  .checklist li .box-ck.done{ background:var(--accent-pull); border-color:var(--accent-pull);}
+  .empty-note{ font-size:11.5px; color:var(--ink-faint); }
+  .box.span2{ grid-column:1 / -1; }
+  .box.title-box{ grid-column:1/-1; display:flex; gap:18px; flex-wrap:wrap; align-items:center; background:#F5F6EF;}
+  .box.title-box .theme{ font-size:15px; font-weight:700; }
+  .box.title-box .who{ font-size:11px; color:var(--ink-soft); }
+
+  footer.credit{ text-align:center; font-size:11px; color:var(--ink-faint); padding:18px; }
+
+  @media print{
+    header.app-header, aside.panel, .canvas-toolbar, footer.credit{ display:none !important; }
+    body{ background:#fff; }
+    main.canvas-wrap{ padding:0; overflow:visible; }
+    #a3-page{ width:100%; box-shadow:none; border:none; }
+    @page{ size:A3 landscape; margin:10mm; }
+  }
+</style>
+<link rel="stylesheet" href="flowline.css">
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html">
+    <span class="mark">FL</span>
+    <span class="name">Flowline</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group">
+            <h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<header class="app-header">
+  <div class="brand">
+    <span class="mark">A3</span>
+    <div>
+      <h1>Flowline · A3</h1>
+      <p>A guided 10-step problem-solving report. Fill in the steps on the left; a printable A3 builds itself on the right.</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-ghost" id="btn-import-vsm">Import from Flowline VSM (.json)</button>
+    <input type="file" id="file-import" accept="application/json">
+    <button class="btn-ghost" id="btn-print">Print / Save as PDF</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="panel" id="accordion-root"></aside>
+  <main class="canvas-wrap">
+    <div id="a3-page"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline A3 — data stays in this browser tab.</footer>
+
+<script>
+/* ============================================================================
+   STATE — 10-step A3 problem solving
+============================================================================ */
+let state = {
+  meta: { title:'', team:'', sponsor:'', date:'' },
+  s1_background: '',
+  s2_problem: '',
+  s3_current: { narrative:'', metrics:[ {label:'', baseline:'', unit:''} ] },
+  s4_target: { narrative:'', metrics:[ {label:'', target:'', unit:'', by:''} ] },
+  s5_root: { statement:'', whys:['','','','',''], fishbone:{ Man:[], Machine:[], Method:[], Material:[], Measurement:[], Environment:[] } },
+  s6_counter: [ {idea:'', addresses:'', impact:''} ],
+  s7_plan: [ {action:'', owner:'', due:'', status:'notstarted'} ],
+  s8_effect: { narrative:'', actuals:[] }, // actuals keyed by matching current/target metric label
+  s9_standardize: { narrative:'', checklist:[ {item:'', done:false} ] },
+  s10_lessons: { narrative:'', next: [ '' ] }
+};
+
+const STEP_DEFS = [
+  {key:'s1', num:1, label:'Background & Theme'},
+  {key:'s2', num:2, label:'Problem Statement'},
+  {key:'s3', num:3, label:'Current Condition'},
+  {key:'s4', num:4, label:'Target Condition'},
+  {key:'s5', num:5, label:'Root Cause Analysis'},
+  {key:'s6', num:6, label:'Countermeasures'},
+  {key:'s7', num:7, label:'Implementation Plan'},
+  {key:'s8', num:8, label:'Effect Confirmation'},
+  {key:'s9', num:9, label:'Standardization'},
+  {key:'s10', num:10, label:'Lessons Learned & Next Steps'}
+];
+let openStep = 's1';
+
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtN(v){ return (v===''||v===null||v===undefined||isNaN(v)) ? null : parseFloat(v); }
+
+/* ============================================================================
+   SIDEBAR — accordion of 10 steps
+============================================================================ */
+function renderAccordion(){
+  const root = document.getElementById('accordion-root');
+  const scrollPos = root.scrollTop;
+  root.innerHTML = '';
+  STEP_DEFS.forEach(def=>{
+    const item = document.createElement('div');
+    item.className = 'accordion-item' + (openStep===def.key ? ' open':'');
+    const head = document.createElement('div');
+    head.className = 'accordion-head';
+    head.innerHTML = `<span class="num">${def.num}</span><span class="label">${def.label}</span><span class="chev">▶</span>`;
+    head.onclick = ()=>{ openStep = (openStep===def.key)? null : def.key; renderAccordion(); };
+    const body = document.createElement('div');
+    body.className = 'accordion-body';
+    body.appendChild(fieldsFor(def.key));
+    item.appendChild(head); item.appendChild(body);
+    root.appendChild(item);
+  });
+  root.scrollTop = scrollPos;
+}
+
+function fieldsFor(key){
+  const wrap = document.createElement('div');
+
+  if (key==='s1'){
+    wrap.innerHTML = `
+      <div class="field"><label>Report title / theme</label><input type="text" id="f-title" value="${esc(state.meta.title)}" placeholder="e.g. Reduce Assembly Line Lead Time"></div>
+      <div class="row2">
+        <div class="field"><label>Team / owner</label><input type="text" id="f-team" value="${esc(state.meta.team)}"></div>
+        <div class="field"><label>Sponsor</label><input type="text" id="f-sponsor" value="${esc(state.meta.sponsor)}"></div>
+      </div>
+      <div class="field"><label>Date</label><input type="date" id="f-date" value="${esc(state.meta.date)}"></div>
+      <div class="field"><label>Background — why does this matter?</label><textarea id="f-s1">${esc(state.s1_background)}</textarea>
+        <div class="hint">Business case, customer impact, why now.</div></div>
+    `;
+    wrap.querySelector('#f-title').oninput = e=>{ state.meta.title = e.target.value; renderReport(); };
+    wrap.querySelector('#f-team').oninput = e=>{ state.meta.team = e.target.value; renderReport(); };
+    wrap.querySelector('#f-sponsor').oninput = e=>{ state.meta.sponsor = e.target.value; renderReport(); };
+    wrap.querySelector('#f-date').oninput = e=>{ state.meta.date = e.target.value; renderReport(); };
+    wrap.querySelector('#f-s1').oninput = e=>{ state.s1_background = e.target.value; renderReport(); };
+  }
+
+  if (key==='s2'){
+    wrap.innerHTML = `<div class="field"><label>Problem statement</label><textarea id="f-s2">${esc(state.s2_problem)}</textarea>
+      <div class="hint">One clear, specific, factual sentence — no root causes or solutions yet.</div></div>`;
+    wrap.querySelector('#f-s2').oninput = e=>{ state.s2_problem = e.target.value; renderReport(); };
+  }
+
+  if (key==='s3'){
+    wrap.innerHTML = `<div class="field"><label>Current condition — narrative</label><textarea id="f-s3n">${esc(state.s3_current.narrative)}</textarea></div>
+      <div class="field"><label>Baseline metrics</label><div id="s3-metrics"></div>
+      <button class="btn-ghost add-row-btn" type="button" id="s3-add">+ Add metric</button></div>`;
+    wrap.querySelector('#f-s3n').oninput = e=>{ state.s3_current.narrative = e.target.value; renderReport(); };
+    renderMetricRows(wrap.querySelector('#s3-metrics'), state.s3_current.metrics, ['label','baseline','unit'], ['Metric','Baseline','Unit']);
+    wrap.querySelector('#s3-add').onclick = ()=>{ state.s3_current.metrics.push({label:'',baseline:'',unit:''}); renderAccordion(); renderReport(); };
+  }
+
+  if (key==='s4'){
+    wrap.innerHTML = `<div class="field"><label>Target condition — narrative</label><textarea id="f-s4n">${esc(state.s4_target.narrative)}</textarea></div>
+      <div class="field"><label>Target metrics</label><div id="s4-metrics"></div>
+      <button class="btn-ghost add-row-btn" type="button" id="s4-add">+ Add metric</button>
+      <div class="hint">Use the same metric names as your baseline so Step 8 can compare them.</div></div>`;
+    wrap.querySelector('#f-s4n').oninput = e=>{ state.s4_target.narrative = e.target.value; renderReport(); };
+    renderMetricRows(wrap.querySelector('#s4-metrics'), state.s4_target.metrics, ['label','target','unit','by'], ['Metric','Target','Unit','By when']);
+    wrap.querySelector('#s4-add').onclick = ()=>{ state.s4_target.metrics.push({label:'',target:'',unit:'',by:''}); renderAccordion(); renderReport(); };
+  }
+
+  if (key==='s5'){
+    wrap.innerHTML = `<div class="field"><label>Root cause statement</label><textarea id="f-s5s">${esc(state.s5_root.statement)}</textarea></div>
+      <div class="field"><label>5 Whys</label><div id="s5-whys"></div></div>
+      <div class="field"><label>Fishbone (optional) — quick bullets by category</label><div id="s5-fish"></div></div>`;
+    wrap.querySelector('#f-s5s').oninput = e=>{ state.s5_root.statement = e.target.value; renderReport(); };
+    const whyWrap = wrap.querySelector('#s5-whys');
+    state.s5_root.whys.forEach((w,i)=>{
+      const row = document.createElement('div'); row.className='dyn-row';
+      row.innerHTML = `<input type="text" placeholder="Why ${i+1}?" value="${esc(w)}">`;
+      row.querySelector('input').oninput = e=>{ state.s5_root.whys[i]=e.target.value; renderReport(); };
+      whyWrap.appendChild(row);
+    });
+    const fishWrap = wrap.querySelector('#s5-fish');
+    Object.keys(state.s5_root.fishbone).forEach(cat=>{
+      const catDiv = document.createElement('div'); catDiv.className='fishbone-cat';
+      catDiv.innerHTML = `<label>${cat}</label>`;
+      state.s5_root.fishbone[cat].forEach((item,i)=>{
+        const row = document.createElement('div'); row.className='dyn-row';
+        row.innerHTML = `<input type="text" value="${esc(item)}"><button class="btn-mini" type="button">✕</button>`;
+        row.querySelector('input').oninput = e=>{ state.s5_root.fishbone[cat][i]=e.target.value; renderReport(); };
+        row.querySelector('button').onclick = ()=>{ state.s5_root.fishbone[cat].splice(i,1); renderAccordion(); renderReport(); };
+        catDiv.appendChild(row);
+      });
+      const addBtn = document.createElement('button'); addBtn.className='btn-mini'; addBtn.type='button'; addBtn.textContent='+ add';
+      addBtn.style.marginBottom='6px';
+      addBtn.onclick = ()=>{ state.s5_root.fishbone[cat].push(''); renderAccordion(); renderReport(); };
+      catDiv.appendChild(addBtn);
+      fishWrap.appendChild(catDiv);
+    });
+  }
+
+  if (key==='s6'){
+    wrap.innerHTML = `<div id="s6-list"></div><button class="btn-ghost add-row-btn" type="button" id="s6-add">+ Add countermeasure</button>`;
+    const listWrap = wrap.querySelector('#s6-list');
+    state.s6_counter.forEach((c,i)=>{
+      const row = document.createElement('div'); row.className='dyn-row'; row.style.flexDirection='column'; row.style.border='1px solid var(--line)'; row.style.borderRadius='3px'; row.style.padding='7px'; row.style.marginBottom='7px';
+      row.innerHTML = `
+        <input type="text" placeholder="Countermeasure idea" value="${esc(c.idea)}" style="margin-bottom:5px;">
+        <input type="text" placeholder="Addresses which root cause?" value="${esc(c.addresses)}" style="margin-bottom:5px;">
+        <div style="display:flex;gap:6px;">
+          <input type="text" placeholder="Expected impact" value="${esc(c.impact)}">
+          <button class="btn-mini" type="button">✕</button>
+        </div>`;
+      const inputs = row.querySelectorAll('input');
+      inputs[0].oninput = e=>{ c.idea=e.target.value; renderReport(); };
+      inputs[1].oninput = e=>{ c.addresses=e.target.value; renderReport(); };
+      inputs[2].oninput = e=>{ c.impact=e.target.value; renderReport(); };
+      row.querySelector('button').onclick = ()=>{ state.s6_counter.splice(i,1); renderAccordion(); renderReport(); };
+      listWrap.appendChild(row);
+    });
+    wrap.querySelector('#s6-add').onclick = ()=>{ state.s6_counter.push({idea:'',addresses:'',impact:''}); renderAccordion(); renderReport(); };
+  }
+
+  if (key==='s7'){
+    wrap.innerHTML = `<div id="s7-list"></div><button class="btn-ghost add-row-btn" type="button" id="s7-add">+ Add action</button>`;
+    const listWrap = wrap.querySelector('#s7-list');
+    state.s7_plan.forEach((a,i)=>{
+      const row = document.createElement('div'); row.style.border='1px solid var(--line)'; row.style.borderRadius='3px'; row.style.padding='7px'; row.style.marginBottom='7px';
+      row.innerHTML = `
+        <input type="text" placeholder="Action" value="${esc(a.action)}" style="margin-bottom:5px;">
+        <div class="row3">
+          <input type="text" placeholder="Owner" value="${esc(a.owner)}">
+          <input type="date" value="${esc(a.due)}">
+          <select>
+            <option value="notstarted" ${a.status==='notstarted'?'selected':''}>Not started</option>
+            <option value="inprogress" ${a.status==='inprogress'?'selected':''}>In progress</option>
+            <option value="done" ${a.status==='done'?'selected':''}>Done</option>
+          </select>
+        </div>
+        <button class="btn-mini" type="button" style="margin-top:5px;">Remove</button>`;
+      const [actionInput] = row.querySelectorAll('input[type=text]');
+      actionInput.oninput = e=>{ a.action=e.target.value; renderReport(); };
+      row.querySelectorAll('.row3 input[type=text]')[0].oninput = e=>{ a.owner=e.target.value; renderReport(); };
+      row.querySelector('input[type=date]').oninput = e=>{ a.due=e.target.value; renderReport(); };
+      row.querySelector('select').onchange = e=>{ a.status=e.target.value; renderReport(); };
+      row.querySelector('.btn-mini').onclick = ()=>{ state.s7_plan.splice(i,1); renderAccordion(); renderReport(); };
+      listWrap.appendChild(row);
+    });
+    wrap.querySelector('#s7-add').onclick = ()=>{ state.s7_plan.push({action:'',owner:'',due:'',status:'notstarted'}); renderAccordion(); renderReport(); };
+  }
+
+  if (key==='s8'){
+    wrap.innerHTML = `<div class="field"><label>Effect confirmation — narrative</label><textarea id="f-s8n">${esc(state.s8_effect.narrative)}</textarea>
+      <div class="hint">Enter the actual result for each metric you set up in Steps 3 & 4.</div></div>
+      <div id="s8-actuals"></div>`;
+    wrap.querySelector('#f-s8n').oninput = e=>{ state.s8_effect.narrative = e.target.value; renderReport(); };
+    const actualsWrap = wrap.querySelector('#s8-actuals');
+    const labels = Array.from(new Set([...state.s3_current.metrics.map(m=>m.label), ...state.s4_target.metrics.map(m=>m.label)].filter(l=>l&&l.trim())));
+    if (labels.length===0){ actualsWrap.innerHTML = '<div class="empty-note">Add metrics in Steps 3 & 4 first.</div>'; }
+    labels.forEach(label=>{
+      let entry = state.s8_effect.actuals.find(a=>a.label===label);
+      if (!entry){ entry = {label, actual:''}; state.s8_effect.actuals.push(entry); }
+      const row = document.createElement('div'); row.className='field';
+      row.innerHTML = `<label>${esc(label)} — actual result</label><input type="text" value="${esc(entry.actual)}">`;
+      row.querySelector('input').oninput = e=>{ entry.actual = e.target.value; renderReport(); };
+      actualsWrap.appendChild(row);
+    });
+  }
+
+  if (key==='s9'){
+    wrap.innerHTML = `<div class="field"><label>Standardization — narrative</label><textarea id="f-s9n">${esc(state.s9_standardize.narrative)}</textarea>
+      <div class="hint">What became the new standard work? Docs, training, visual controls updated.</div></div>
+      <div class="field"><label>Checklist</label><div id="s9-list"></div>
+      <button class="btn-ghost add-row-btn" type="button" id="s9-add">+ Add item</button></div>`;
+    wrap.querySelector('#f-s9n').oninput = e=>{ state.s9_standardize.narrative = e.target.value; renderReport(); };
+    const listWrap = wrap.querySelector('#s9-list');
+    state.s9_standardize.checklist.forEach((c,i)=>{
+      const row = document.createElement('div'); row.className='dyn-row'; row.style.alignItems='center';
+      row.innerHTML = `<input type="checkbox" style="flex:0 0 auto;width:15px;height:15px;" ${c.done?'checked':''}>
+        <input type="text" placeholder="Checklist item" value="${esc(c.item)}">
+        <button class="btn-mini" type="button">✕</button>`;
+      row.querySelector('input[type=checkbox]').onchange = e=>{ c.done=e.target.checked; renderReport(); };
+      row.querySelector('input[type=text]').oninput = e=>{ c.item=e.target.value; renderReport(); };
+      row.querySelector('button').onclick = ()=>{ state.s9_standardize.checklist.splice(i,1); renderAccordion(); renderReport(); };
+      listWrap.appendChild(row);
+    });
+    wrap.querySelector('#s9-add').onclick = ()=>{ state.s9_standardize.checklist.push({item:'',done:false}); renderAccordion(); renderReport(); };
+  }
+
+  if (key==='s10'){
+    wrap.innerHTML = `<div class="field"><label>Lessons learned</label><textarea id="f-s10n">${esc(state.s10_lessons.narrative)}</textarea></div>
+      <div class="field"><label>Next steps / remaining issues</label><div id="s10-list"></div>
+      <button class="btn-ghost add-row-btn" type="button" id="s10-add">+ Add next step</button></div>`;
+    wrap.querySelector('#f-s10n').oninput = e=>{ state.s10_lessons.narrative = e.target.value; renderReport(); };
+    const listWrap = wrap.querySelector('#s10-list');
+    state.s10_lessons.next.forEach((n,i)=>{
+      const row = document.createElement('div'); row.className='dyn-row';
+      row.innerHTML = `<input type="text" value="${esc(n)}"><button class="btn-mini" type="button">✕</button>`;
+      row.querySelector('input').oninput = e=>{ state.s10_lessons.next[i]=e.target.value; renderReport(); };
+      row.querySelector('button').onclick = ()=>{ state.s10_lessons.next.splice(i,1); renderAccordion(); renderReport(); };
+      listWrap.appendChild(row);
+    });
+    wrap.querySelector('#s10-add').onclick = ()=>{ state.s10_lessons.next.push(''); renderAccordion(); renderReport(); };
+  }
+
+  return wrap;
+}
+
+function renderMetricRows(container, arr, fieldKeys, placeholders){
+  container.innerHTML = '';
+  arr.forEach((m,i)=>{
+    const row = document.createElement('div'); row.className='dyn-row';
+    fieldKeys.forEach((fk,fi)=>{
+      const inp = document.createElement('input');
+      inp.type = fk==='by' ? 'date' : 'text';
+      inp.placeholder = placeholders[fi];
+      inp.value = m[fk]||'';
+      inp.oninput = e=>{ m[fk]=e.target.value; renderReport(); };
+      row.appendChild(inp);
+    });
+    const rm = document.createElement('button'); rm.className='btn-mini'; rm.type='button'; rm.textContent='✕';
+    rm.onclick = ()=>{ arr.splice(i,1); renderAccordion(); renderReport(); };
+    row.appendChild(rm);
+    container.appendChild(row);
+  });
+}
+
+/* ============================================================================
+   A3 REPORT RENDER
+============================================================================ */
+function narrativeHtml(text){
+  return `<p class="narrative${text&&text.trim()?'':' placeholder'}">${esc(text)}</p>`;
+}
+
+function renderReport(){
+  const page = document.getElementById('a3-page');
+  const m = state.meta;
+
+  const metricPills = (list, valKey)=> list.filter(x=>x.label&&x.label.trim()).map(x=>`
+    <div class="metric-pill"><span class="l">${esc(x.label)}</span><span class="v">${esc(x[valKey])||'—'}${x.unit?' '+esc(x.unit):''}</span></div>
+  `).join('') || '<div class="empty-note">No metrics added yet.</div>';
+
+  const whysHtml = state.s5_root.whys.filter(w=>w.trim()).map((w,i)=>`
+    <div class="why-row"><span class="tag">WHY ${i+1}</span><span>${esc(w)}</span></div>
+  `).join('') || '<div class="empty-note">No whys added yet.</div>';
+
+  const fishHtml = Object.keys(state.s5_root.fishbone).map(cat=>{
+    const items = state.s5_root.fishbone[cat].filter(i=>i.trim());
+    return `<div class="cat"><b>${cat}</b>${items.length? items.map(i=>esc(i)).join('<br>') : '—'}</div>`;
+  }).join('');
+
+  const counterRows = state.s6_counter.filter(c=>c.idea.trim()).map(c=>`
+    <tr><td>${esc(c.idea)}</td><td>${esc(c.addresses)}</td><td>${esc(c.impact)}</td></tr>
+  `).join('');
+
+  const planRows = state.s7_plan.filter(a=>a.action.trim()).map(a=>`
+    <tr><td>${esc(a.action)}</td><td>${esc(a.owner)}</td><td>${esc(a.due)}</td>
+    <td><span class="status-chip ${a.status}">${a.status==='notstarted'?'Not started':a.status==='inprogress'?'In progress':'Done'}</span></td></tr>
+  `).join('');
+
+  const compareBars = state.s8_effect.actuals.filter(a=>a.label.trim()).map(a=>{
+    const baseline = state.s3_current.metrics.find(x=>x.label===a.label);
+    const target = state.s4_target.metrics.find(x=>x.label===a.label);
+    const bV = fmtN(baseline&&baseline.baseline), tV = fmtN(target&&target.target), aV = fmtN(a.actual);
+    let barHtml = '';
+    if (bV!==null && tV!==null && aV!==null){
+      const lo = Math.min(bV,tV,aV), hi = Math.max(bV,tV,aV);
+      const range = (hi-lo)||1;
+      const pct = v => Math.max(4, Math.min(100, ((v-lo)/range)*100));
+      const improving = tV < bV; // lower target = improvement (common for lead time etc.)
+      const color = (improving ? aV<=tV : aV>=tV) ? 'var(--accent-pull)' : 'var(--accent-push)';
+      barHtml = `<div class="compare-bar-track"><div class="compare-bar-fill" style="width:${pct(aV)}%;background:${color};"></div></div>`;
+    }
+    return `<div class="compare-bar-wrap">
+      <div class="compare-bar-label"><span>${esc(a.label)}</span><span>baseline ${esc(baseline?baseline.baseline:'—')} → target ${esc(target?target.target:'—')} → actual ${esc(a.actual)||'—'}</span></div>
+      ${barHtml}
+    </div>`;
+  }).join('') || '<div class="empty-note">No results recorded yet.</div>';
+
+  const checklistHtml = state.s9_standardize.checklist.filter(c=>c.item.trim()).map(c=>`
+    <li><span class="box-ck ${c.done?'done':''}"></span><span>${esc(c.item)}</span></li>
+  `).join('') || '<div class="empty-note">No checklist items yet.</div>';
+
+  const nextHtml = state.s10_lessons.next.filter(n=>n.trim()).map(n=>`<li>${esc(n)}</li>`).join('') || '<div class="empty-note">None recorded.</div>';
+
+  page.innerHTML = `
+    <div class="a3-header">
+      <div>
+        <h2>${esc(m.title)||'Untitled A3'}</h2>
+      </div>
+      <div class="meta">
+        TEAM: ${esc(m.team)||'—'}<br>
+        SPONSOR: ${esc(m.sponsor)||'—'}<br>
+        DATE: ${esc(m.date)||'—'}
+      </div>
+    </div>
+    <div class="a3-grid">
+
+      <div class="box"><h3><span class="n">1</span>Background &amp; Theme</h3>${narrativeHtml(state.s1_background)}</div>
+      <div class="box"><h3><span class="n">2</span>Problem Statement</h3>${narrativeHtml(state.s2_problem)}</div>
+
+      <div class="box"><h3><span class="n">3</span>Current Condition</h3>${narrativeHtml(state.s3_current.narrative)}
+        <div style="display:flex;flex-wrap:wrap;">${metricPills(state.s3_current.metrics,'baseline')}</div></div>
+      <div class="box"><h3><span class="n">4</span>Target Condition</h3>${narrativeHtml(state.s4_target.narrative)}
+        <div style="display:flex;flex-wrap:wrap;">${metricPills(state.s4_target.metrics,'target')}</div></div>
+
+      <div class="box span2"><h3><span class="n">5</span>Root Cause Analysis</h3>
+        ${narrativeHtml(state.s5_root.statement)}
+        <div class="whys-chain">${whysHtml}</div>
+        <div class="fish-cats">${fishHtml}</div>
+      </div>
+
+      <div class="box"><h3><span class="n">6</span>Countermeasures</h3>
+        ${counterRows ? `<table class="mini-table"><tr><th>Idea</th><th>Addresses</th><th>Impact</th></tr>${counterRows}</table>` : '<div class="empty-note">No countermeasures yet.</div>'}
+      </div>
+      <div class="box"><h3><span class="n">7</span>Implementation Plan</h3>
+        ${planRows ? `<table class="mini-table"><tr><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr>${planRows}</table>` : '<div class="empty-note">No actions yet.</div>'}
+      </div>
+
+      <div class="box"><h3><span class="n">8</span>Effect Confirmation</h3>${narrativeHtml(state.s8_effect.narrative)}${compareBars}</div>
+      <div class="box"><h3><span class="n">9</span>Standardization</h3>${narrativeHtml(state.s9_standardize.narrative)}<ul class="checklist">${checklistHtml}</ul></div>
+
+      <div class="box span2"><h3><span class="n">10</span>Lessons Learned &amp; Next Steps</h3>
+        ${narrativeHtml(state.s10_lessons.narrative)}
+        <ul class="checklist" style="list-style:disc;padding-left:16px;">${nextHtml}</ul>
+      </div>
+
+    </div>
+  `;
+}
+
+/* ============================================================================
+   IMPORT FROM VSM
+============================================================================ */
+document.getElementById('btn-import-vsm').addEventListener('click', ()=> document.getElementById('file-import').click());
+document.getElementById('file-import').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if (data.source !== 'flowline-vsm' || !data.state){ alert('This file does not look like a Flowline VSM export.'); return; }
+      applyVsmImport(data);
+    }catch(err){ alert('Could not read that file: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+function applyVsmImport(data){
+  const vs = data.state, met = data.metrics;
+  const bottleneck = vs.steps.reduce((max,s)=> (s.ct > (max?max.ct:-1) ? s : max), null);
+
+  if (!state.meta.title) state.meta.title = `Reduce Lead Time — ${vs.steps.map(s=>s.name).join(' → ')}`;
+
+  state.s1_background = state.s1_background || `Imported from the current-state value stream map for ${vs.customerName || 'the customer'}. `+
+    `Takt time is ${(met.taktTimeSec).toFixed(0)}s/unit against a daily demand of ${vs.demand} units.`;
+
+  state.s2_problem = state.s2_problem || `Total production lead time is ${met.totalLeadDays.toFixed(1)} days while total value-added time is only `+
+    `${met.totalValueAddedSec.toFixed(0)}s — a process cycle efficiency of ${met.processCycleEfficiencyPct.toFixed(2)}%.`;
+
+  const metricSet = [
+    {label:'Total lead time (days)', baseline: met.totalLeadDays.toFixed(1), unit:'days'},
+    {label:'Process cycle efficiency', baseline: met.processCycleEfficiencyPct.toFixed(2), unit:'%'},
+    {label:'Takt time', baseline: met.taktTimeSec.toFixed(0), unit:'sec/unit'}
+  ];
+  if (bottleneck) metricSet.push({label:`${bottleneck.name} cycle time`, baseline:String(bottleneck.ct), unit:'sec'});
+  state.s3_current.metrics = metricSet;
+  state.s3_current.narrative = state.s3_current.narrative || `Current state mapped across ${vs.steps.length} process steps: ${vs.steps.map(s=>s.name).join(', ')}.`;
+
+  state.s4_target.metrics = metricSet.map(m=> ({label:m.label, target:'', unit:m.unit, by:''}));
+
+  (vs.kaizen||[]).forEach(k=>{
+    const step = vs.steps.find(s=>s.id===k.stepId);
+    state.s6_counter.push({ idea:k.text, addresses: step? step.name : '', impact:'' });
+  });
+  state.s6_counter = state.s6_counter.filter(c=>c.idea.trim());
+  if (state.s6_counter.length===0) state.s6_counter.push({idea:'',addresses:'',impact:''});
+
+  openStep = 's1';
+  renderAccordion();
+  renderReport();
+}
+
+/* ============================================================================
+   PRINT
+============================================================================ */
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+
+/* init */
+renderAccordion();
+renderReport();
+</script>
+<script src="flowline.js"></script>
+</body>
+</html>

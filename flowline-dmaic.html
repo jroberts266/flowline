@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — DMAIC Project Charter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  main.canvas-wrap{ display:flex; justify-content:center; }
+  #charter-page{ background:var(--panel); width:1100px; max-width:100%; padding:26px 30px; border:1px solid var(--line); box-shadow:var(--shadow); border-radius:4px;}
+  .ch-header{ display:flex; justify-content:space-between; border-bottom:3px solid var(--ink); padding-bottom:10px; margin-bottom:14px; gap:20px;}
+  .ch-header h2{ font-family:var(--mono); font-size:20px; margin:0; }
+  .ch-header .meta{ font-size:11px; color:var(--ink-soft); font-family:var(--mono); text-align:right; line-height:1.6;}
+  .ch-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .box{ border:1.4px solid var(--ink); border-radius:2px; padding:10px 12px; }
+  .box h3{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin:0 0 8px; display:flex; gap:6px; align-items:center;}
+  .box h3 .dchip{ padding:1px 7px; border-radius:8px; font-size:9.5px; color:#fff; }
+  .box p{ font-size:12px; line-height:1.5; margin:0; white-space:pre-wrap; }
+  .box p.placeholder{ color:var(--ink-faint); }
+  .box.span2{ grid-column:1/-1; }
+  .phase-timeline{ display:flex; gap:2px; margin-top:6px; }
+  .phase-timeline .seg{ flex:1; text-align:center; font-size:9.5px; font-family:var(--mono); padding:4px 2px; color:#fff; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);">Plan &amp; Manage</span>
+    <h1>DMAIC Project Charter</h1>
+    <p>The standard one-pager for a Six Sigma project: Define, Measure, Analyze, Improve, Control.</p>
+  </div>
+  <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Project info</h2>
+      <div class="field"><label>Project title</label><input type="text" id="f-title" value="Reduce Scrap Rate in Stamping"></div>
+      <div class="row2">
+        <div class="field"><label>Champion / sponsor</label><input type="text" id="f-champion"></div>
+        <div class="field"><label>Black/Green Belt</label><input type="text" id="f-belt"></div>
+      </div>
+      <div class="field"><label>Team members</label><input type="text" id="f-team"></div>
+    </div>
+
+    <div class="section">
+      <h2>Define</h2>
+      <div class="field"><label>Business case</label><textarea id="f-business"></textarea></div>
+      <div class="field"><label>Problem statement</label><textarea id="f-problem"></textarea></div>
+      <div class="field"><label>Goal statement</label><textarea id="f-goal"></textarea></div>
+      <div class="row2">
+        <div class="field"><label>In scope</label><textarea id="f-inscope"></textarea></div>
+        <div class="field"><label>Out of scope</label><textarea id="f-outscope"></textarea></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Measure</h2>
+      <div class="field"><label>Key metric (Y)</label><input type="text" id="f-metric" placeholder="e.g. Scrap rate (%)"></div>
+      <div class="row3">
+        <div class="field"><label>Baseline</label><input type="text" id="f-baseline"></div>
+        <div class="field"><label>Target</label><input type="text" id="f-target"></div>
+        <div class="field"><label>Unit</label><input type="text" id="f-unit"></div>
+      </div>
+      <div class="field"><label>Data collection plan</label><textarea id="f-datacollect"></textarea></div>
+    </div>
+
+    <div class="section">
+      <h2>Analyze</h2>
+      <div class="field"><label>Root cause summary</label><textarea id="f-rootcause"></textarea></div>
+    </div>
+
+    <div class="section">
+      <h2>Improve</h2>
+      <div class="field"><label>Planned improvements</label><textarea id="f-improve"></textarea></div>
+    </div>
+
+    <div class="section">
+      <h2>Control</h2>
+      <div class="field"><label>Control plan / sustainment</label><textarea id="f-control"></textarea></div>
+    </div>
+
+    <div class="section">
+      <h2>Timeline</h2>
+      <div class="row2"><div class="field"><label>Define by</label><input type="date" id="d-define"></div><div class="field"><label>Measure by</label><input type="date" id="d-measure"></div></div>
+      <div class="row2"><div class="field"><label>Analyze by</label><input type="date" id="d-analyze"></div><div class="field"><label>Improve by</label><input type="date" id="d-improve"></div></div>
+      <div class="field"><label>Control by</label><input type="date" id="d-control"></div>
+    </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div id="charter-page"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function val(id){ return document.getElementById(id).value; }
+function p(text){ return `<p class="${text&&text.trim()?'':'placeholder'}">${esc(text)||'—'}</p>`; }
+
+const PHASE_COLORS = { D:'var(--ink)', M:'var(--accent-push)', A:'var(--purple)', I:'var(--accent-pull)', C:'var(--accent-kaizen-ink,#8a6b00)' };
+
+function render(){
+  const page = document.getElementById('charter-page');
+  page.innerHTML = `
+    <div class="ch-header">
+      <h2>${esc(val('f-title'))||'Untitled DMAIC Project'}</h2>
+      <div class="meta">CHAMPION: ${esc(val('f-champion'))||'—'}<br>BELT: ${esc(val('f-belt'))||'—'}<br>TEAM: ${esc(val('f-team'))||'—'}</div>
+    </div>
+    <div class="ch-grid">
+      <div class="box span2"><h3><span class="dchip" style="background:${PHASE_COLORS.D}">DEFINE</span></h3>
+        <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><b style="font-size:11px;">Business case</b>${p(val('f-business'))}</div>
+          <div><b style="font-size:11px;">Problem statement</b>${p(val('f-problem'))}</div>
+        </div>
+        <div style="margin-top:8px;"><b style="font-size:11px;">Goal statement</b>${p(val('f-goal'))}</div>
+        <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+          <div><b style="font-size:11px;">In scope</b>${p(val('f-inscope'))}</div>
+          <div><b style="font-size:11px;">Out of scope</b>${p(val('f-outscope'))}</div>
+        </div>
+      </div>
+
+      <div class="box"><h3><span class="dchip" style="background:${PHASE_COLORS.M}">MEASURE</span></h3>
+        <table class="mini-table"><tr><th>Metric</th><th>Baseline</th><th>Target</th></tr>
+        <tr><td>${esc(val('f-metric'))||'—'}</td><td>${esc(val('f-baseline'))||'—'} ${esc(val('f-unit'))}</td><td>${esc(val('f-target'))||'—'} ${esc(val('f-unit'))}</td></tr></table>
+        <div style="margin-top:8px;"><b style="font-size:11px;">Data collection plan</b>${p(val('f-datacollect'))}</div>
+      </div>
+
+      <div class="box"><h3><span class="dchip" style="background:${PHASE_COLORS.A}">ANALYZE</span></h3>${p(val('f-rootcause'))}</div>
+
+      <div class="box"><h3><span class="dchip" style="background:${PHASE_COLORS.I}">IMPROVE</span></h3>${p(val('f-improve'))}</div>
+
+      <div class="box"><h3><span class="dchip" style="background:${PHASE_COLORS.C}">CONTROL</span></h3>${p(val('f-control'))}</div>
+
+      <div class="box span2"><h3>Timeline</h3>
+        <div class="phase-timeline">
+          <div class="seg" style="background:${PHASE_COLORS.D}">Define<br>${esc(val('d-define'))||'—'}</div>
+          <div class="seg" style="background:${PHASE_COLORS.M}">Measure<br>${esc(val('d-measure'))||'—'}</div>
+          <div class="seg" style="background:${PHASE_COLORS.A}">Analyze<br>${esc(val('d-analyze'))||'—'}</div>
+          <div class="seg" style="background:${PHASE_COLORS.I}">Improve<br>${esc(val('d-improve'))||'—'}</div>
+          <div class="seg" style="background:${PHASE_COLORS.C}">Control<br>${esc(val('d-control'))||'—'}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+document.querySelectorAll('input, textarea').forEach(el=> el.addEventListener('input', render));
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+render();
+</script>
+</body>
+</html>

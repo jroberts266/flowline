@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Yamazumi Chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  #chart-holder{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px; }
+  .op-card{ border:1px solid var(--line); border-radius:var(--radius); padding:9px 10px; margin-bottom:8px; }
+  .op-card .head{ display:flex; gap:6px; margin-bottom:6px; }
+  .op-card .head input[type=text]{ flex:1; font-weight:600; }
+  .elem-row{ display:flex; gap:6px; margin-bottom:4px; align-items:center; }
+  .elem-row input[type=text]{ flex:1; }
+  .elem-row input[type=number]{ width:70px; }
+  .op-total{ font-family:var(--mono); font-size:11px; color:var(--ink-soft); text-align:right; margin-top:4px;}
+  .imbalance-note{ font-size:12px; color:var(--ink-soft); margin-top:12px; padding:10px 14px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel);}
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:var(--accent-push-soft);color:var(--accent-push);">Mapping &amp; Flow</span>
+    <h1>Yamazumi Chart</h1>
+    <p>Stack each operator's work elements to see who's over takt and who has slack to rebalance.</p>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Takt time</h2>
+      <div class="field"><label>Takt time (seconds/unit)</label><input type="number" id="in-takt" value="55"></div>
+    </div>
+    <div class="section">
+      <h2>Operators &amp; elements</h2>
+      <div id="op-list"></div>
+      <button class="btn-ghost add-row-btn" type="button" id="btn-add-op">+ Add operator/station</button>
+    </div>
+  </aside>
+  <main class="canvas-wrap">
+    <div id="chart-holder"></div>
+    <div class="imbalance-note" id="note"></div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+let ops = [
+  { id:1, name:'Operator 1', elems:[{name:'Load part',t:12},{name:'Fasten',t:28},{name:'Inspect',t:8}] },
+  { id:2, name:'Operator 2', elems:[{name:'Sub-assembly',t:20},{name:'Fasten',t:25},{name:'Label',t:15}] },
+  { id:3, name:'Operator 3', elems:[{name:'Final assembly',t:38},{name:'Pack',t:10}] }
+];
+let nextOpId=4;
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderEditor(){
+  const wrap = document.getElementById('op-list');
+  wrap.innerHTML = '';
+  ops.forEach((op,oi)=>{
+    const card = document.createElement('div'); card.className='op-card';
+    card.innerHTML = `<div class="head"><input type="text" value="${esc(op.name)}"><button class="btn-mini" type="button">✕ station</button></div><div class="elems"></div><button class="btn-mini add-elem-btn" type="button" style="width:100%;">+ element</button>`;
+    card.querySelector('.head input').oninput = e=>{ op.name=e.target.value; renderChart(); };
+    card.querySelector('.head .btn-mini').onclick = ()=>{ ops.splice(oi,1); renderEditor(); renderChart(); };
+    const elemsWrap = card.querySelector('.elems');
+    op.elems.forEach((el,ei)=>{
+      const row = document.createElement('div'); row.className='elem-row';
+      row.innerHTML = `<input type="text" value="${esc(el.name)}" placeholder="Element"><input type="number" value="${el.t}" min="0"><button class="btn-mini" type="button">✕</button>`;
+      const inputs = row.querySelectorAll('input');
+      inputs[0].oninput = e=>{ el.name=e.target.value; renderChart(); };
+      inputs[1].oninput = e=>{ el.t=parseFloat(e.target.value)||0; renderChart(); };
+      row.querySelector('button').onclick = ()=>{ op.elems.splice(ei,1); renderEditor(); renderChart(); };
+      elemsWrap.appendChild(row);
+    });
+    card.querySelector('.add-elem-btn').onclick = ()=>{ op.elems.push({name:'',t:0}); renderEditor(); renderChart(); };
+    wrap.appendChild(card);
+  });
+}
+document.getElementById('btn-add-op').onclick = ()=>{ ops.push({id:nextOpId++, name:`Operator ${ops.length+1}`, elems:[{name:'',t:0}]}); renderEditor(); renderChart(); };
+
+const ELEM_COLORS = ['#1B2A4A','#2F6F6B','#D6602C','#5B4EA6','#9AA6BE','#F2B705'];
+
+function renderChart(){
+  const takt = parseFloat(document.getElementById('in-takt').value)||0;
+  const holder = document.getElementById('chart-holder');
+  if (ops.length===0){ holder.innerHTML='<div class="empty-note">Add at least one operator.</div>'; return; }
+
+  const totals = ops.map(op=> op.elems.reduce((s,e)=>s+e.t,0));
+  const maxVal = Math.max(takt, ...totals, 10) * 1.15;
+
+  const W = Math.max(500, ops.length*140+80), H=400, padL=50, padR=20, padT=20, padB=50;
+  const barW = Math.min(90, (W-padL-padR)/ops.length*0.6);
+  const gap = (W-padL-padR)/ops.length;
+  const yScale = v => (H-padB) - (v/maxVal)*(H-padT-padB);
+  const taktY = yScale(takt);
+
+  let bars = '';
+  ops.forEach((op,i)=>{
+    const x = padL + gap*i + (gap-barW)/2;
+    let yCursor = H-padB;
+    op.elems.forEach((el,ei)=>{
+      const h = (el.t/maxVal)*(H-padT-padB);
+      const y = yCursor - h;
+      bars += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${ELEM_COLORS[ei%ELEM_COLORS.length]}" stroke="#fff" stroke-width="1"/>`;
+      if (h>14) bars += `<text x="${x+barW/2}" y="${y+h/2+4}" font-size="9.5" text-anchor="middle" fill="#fff">${esc(el.name)||'—'} (${el.t}s)</text>`;
+      yCursor = y;
+    });
+    const total = totals[i];
+    const overTakt = takt>0 && total>takt;
+    bars += `<text x="${x+barW/2}" y="${H-padB+16}" font-size="11" text-anchor="middle" font-family="var(--mono)" fill="var(--ink)">${esc(op.name)}</text>`;
+    bars += `<text x="${x+barW/2}" y="${yCursor-6}" font-size="10.5" text-anchor="middle" font-family="var(--mono)" font-weight="700" fill="${overTakt?'var(--accent-push)':'var(--accent-pull)'}">${total.toFixed(0)}s</text>`;
+  });
+
+  holder.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;">
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--ink-faint)"/>
+    ${bars}
+    <line x1="${padL}" y1="${taktY}" x2="${W-padR}" y2="${taktY}" stroke="var(--accent-push)" stroke-width="1.6" stroke-dasharray="5,3"/>
+    <text x="${W-padR}" y="${taktY-5}" font-size="10.5" text-anchor="end" font-family="var(--mono)" fill="var(--accent-push)">Takt: ${takt}s</text>
+  </svg>`;
+
+  const overOps = ops.filter((op,i)=> takt>0 && totals[i]>takt).map(op=>op.name);
+  const slackOps = ops.map((op,i)=>({name:op.name, slack:takt-totals[i]})).filter(o=>o.slack>0).sort((a,b)=>b.slack-a.slack);
+  const note = document.getElementById('note');
+  if (takt<=0){ note.textContent='Set a takt time to see balance feedback.'; }
+  else if (overOps.length===0){ note.textContent = 'Every station is at or under takt time — line is balanced against demand.'; }
+  else { note.innerHTML = `<b>${overOps.join(', ')}</b> ${overOps.length===1?'is':'are'} over takt time and will bottleneck the line. ` +
+    (slackOps.length ? `Consider moving work to ${slackOps.map(o=>`${o.name} (${o.slack.toFixed(0)}s slack)`).join(', ')}.` : 'No other station currently has slack to absorb the extra work.'); }
+}
+
+document.getElementById('in-takt').addEventListener('input', renderChart);
+renderEditor();
+renderChart();
+</script>
+</body>
+</html>

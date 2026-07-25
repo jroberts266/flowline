@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — OEE Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .calc-wrap{ max-width:760px; margin:0 auto; padding:36px 20px; }
+  .oee-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin:20px 0; }
+  .oee-card{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px; text-align:center; }
+  .oee-card .lbl{ font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); }
+  .oee-card .pct{ font-family:var(--mono); font-size:30px; font-weight:700; margin:6px 0 4px; }
+  .oee-card .bar{ height:6px; border-radius:3px; background:var(--grid); overflow:hidden; }
+  .oee-card .bar span{ display:block; height:100%; }
+  .oee-total{ background:var(--ink); color:#fff; border-radius:6px; padding:22px; text-align:center; margin-bottom:8px;}
+  .oee-total .pct{ font-family:var(--mono); font-size:48px; font-weight:700; }
+  .oee-total .lbl{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; opacity:.75; }
+  .verdict{ text-align:center; font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:var(--accent-pull-soft);color:var(--accent-pull);">Analysis &amp; Quality</span>
+    <h1>OEE Calculator</h1>
+    <p>Overall Equipment Effectiveness = Availability × Performance × Quality.</p>
+  </div>
+</div>
+
+<div class="calc-wrap">
+  <div class="section">
+    <h2>Availability</h2>
+    <div class="row2">
+      <div class="field"><label>Planned production time (min)</label><input type="number" id="in-planned" value="460"></div>
+      <div class="field"><label>Downtime (min)</label><input type="number" id="in-down" value="40"></div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Performance</h2>
+    <div class="row2">
+      <div class="field"><label>Ideal cycle time (sec/unit)</label><input type="number" id="in-ideal" value="30"></div>
+      <div class="field"><label>Total units produced</label><input type="number" id="in-total" value="760"></div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Quality</h2>
+    <div class="row2">
+      <div class="field"><label>Good units produced</label><input type="number" id="in-good" value="720"></div>
+      <div class="field"><label>Total units produced (auto-filled)</label><input type="number" id="in-total2" value="760" disabled></div>
+    </div>
+  </div>
+
+  <div class="oee-total">
+    <div class="pct" id="out-oee">—</div>
+    <div class="lbl">Overall Equipment Effectiveness</div>
+  </div>
+  <div class="verdict" id="out-verdict"></div>
+
+  <div class="oee-grid">
+    <div class="oee-card"><div class="lbl">Availability</div><div class="pct" id="out-a">—</div><div class="bar"><span id="bar-a"></span></div></div>
+    <div class="oee-card"><div class="lbl">Performance</div><div class="pct" id="out-p">—</div><div class="bar"><span id="bar-p"></span></div></div>
+    <div class="oee-card"><div class="lbl">Quality</div><div class="pct" id="out-q">—</div><div class="bar"><span id="bar-q"></span></div></div>
+  </div>
+
+  <div class="field hint" style="font-size:12px;color:var(--ink-soft);">
+    World-class OEE is generally considered ~85%+ (95% availability × 99% performance × 99.9% quality). Most manufacturers run 40–60% until they start tracking and improving it.
+  </div>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+function num(id){ return parseFloat(document.getElementById(id).value)||0; }
+function pct(x){ return isFinite(x) ? (x*100).toFixed(1)+'%' : '—'; }
+function colorFor(v){ return v>=0.85?'var(--accent-pull)': v>=0.6?'var(--accent-kaizen)':'var(--accent-push)'; }
+
+function calc(){
+  document.getElementById('in-total2').value = document.getElementById('in-total').value;
+  const planned = num('in-planned'), down = num('in-down');
+  const runTime = Math.max(0, planned-down);
+  const availability = planned>0 ? runTime/planned : 0;
+
+  const ideal = num('in-ideal'), total = num('in-total');
+  const runTimeSec = runTime*60;
+  const performance = runTimeSec>0 ? Math.min(1,(ideal*total)/runTimeSec) : 0;
+
+  const good = num('in-good');
+  const quality = total>0 ? Math.min(1, good/total) : 0;
+
+  const oee = availability*performance*quality;
+
+  document.getElementById('out-a').textContent = pct(availability);
+  document.getElementById('out-p').textContent = pct(performance);
+  document.getElementById('out-q').textContent = pct(quality);
+  document.getElementById('out-oee').textContent = pct(oee);
+  document.getElementById('bar-a').style.cssText = `width:${availability*100}%;background:${colorFor(availability)}`;
+  document.getElementById('bar-p').style.cssText = `width:${performance*100}%;background:${colorFor(performance)}`;
+  document.getElementById('bar-q').style.cssText = `width:${quality*100}%;background:${colorFor(quality)}`;
+
+  const v = document.getElementById('out-verdict');
+  if (oee>=0.85) v.textContent = 'World-class range.';
+  else if (oee>=0.6) v.textContent = 'Typical range — room to improve, likely in performance or availability losses.';
+  else v.textContent = 'Below typical range — worth digging into which of the three factors is driving the loss.';
+}
+document.querySelectorAll('input').forEach(el=> el.addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>

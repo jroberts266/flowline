@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Kanban Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .board-wrap{ padding:24px; overflow-x:auto; }
+  .board{ display:flex; gap:16px; align-items:flex-start; min-height:60vh; }
+  .column{
+    background:var(--panel); border:1px solid var(--line); border-radius:6px; width:270px; flex:0 0 270px;
+    padding:10px; display:flex; flex-direction:column; gap:8px;
+  }
+  .column.drag-over{ outline:2px dashed var(--accent-pull); outline-offset:-4px; }
+  .col-head{ display:flex; align-items:center; gap:6px; }
+  .col-head input{ font-family:var(--mono); font-size:12.5px; font-weight:700; border:none; background:transparent; flex:1; padding:2px 4px; border-radius:3px;}
+  .col-head input:focus{ background:var(--grid); outline:none; }
+  .col-count{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); background:var(--grid); padding:1px 7px; border-radius:8px;}
+  .card{
+    background:#fff; border:1px solid var(--line); border-left:3px solid var(--accent-pull); border-radius:4px; padding:9px 10px;
+    font-size:12.5px; cursor:grab; box-shadow:var(--shadow); position:relative;
+  }
+  .card:active{ cursor:grabbing; }
+  .card .card-x{ position:absolute; top:4px; right:5px; font-size:11px; color:var(--ink-faint); cursor:pointer; }
+  .card .card-x:hover{ color:var(--danger); }
+  .card textarea{ width:100%; border:none; background:transparent; font-family:inherit; font-size:inherit; resize:none; padding:0; }
+  .card textarea:focus{ outline:none; }
+  .add-card-btn{ font-size:11.5px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:4px; padding:6px; text-align:center; }
+  .add-card-btn:hover{ border-color:var(--ink); color:var(--ink); }
+  .add-col{ width:220px; flex:0 0 220px; }
+  .toolbar{ padding:14px 24px 0; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);">Plan &amp; Manage</span>
+    <h1>Kanban Board</h1>
+    <p>A simple visual work board for a cell, an improvement backlog, or a kaizen action list. Drag cards between columns.</p>
+  </div>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<footer class="credit">Flowline — data resets on reload; export isn't included yet, so treat this as a working-session board.</footer>
+
+<script src="flowline.js"></script>
+<script>
+let columns = [
+  { id:1, name:'To Do', cards:[ {id:1,text:'Order quick-change dies'}, {id:2,text:'Update standard work sheet'} ] },
+  { id:2, name:'In Progress', cards:[ {id:3,text:'Trial supermarket at Assembly'} ] },
+  { id:3, name:'Done', cards:[ {id:4,text:'5S audit — Cell 3'} ] }
+];
+let nextColId = 4, nextCardId = 5;
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function render(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  columns.forEach(col=>{
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+    colEl.dataset.colId = col.id;
+    colEl.innerHTML = `
+      <div class="col-head">
+        <input type="text" value="${esc(col.name)}">
+        <span class="col-count">${col.cards.length}</span>
+        <span class="btn-mini" style="cursor:pointer;" title="Delete column">✕</span>
+      </div>
+    `;
+    colEl.querySelector('.col-head input').oninput = e=>{ col.name = e.target.value; };
+    colEl.querySelector('.col-head .btn-mini').onclick = ()=>{ columns = columns.filter(c=>c.id!==col.id); render(); };
+
+    col.cards.forEach(card=>{
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      cardEl.draggable = true;
+      cardEl.dataset.cardId = card.id;
+      cardEl.innerHTML = `<span class="card-x">✕</span><textarea rows="2">${esc(card.text)}</textarea>`;
+      cardEl.querySelector('textarea').oninput = e=>{ card.text = e.target.value; };
+      cardEl.querySelector('.card-x').onclick = ()=>{ col.cards = col.cards.filter(c=>c.id!==card.id); render(); };
+      cardEl.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', JSON.stringify({cardId:card.id, fromCol:col.id}));
+        setTimeout(()=> cardEl.style.opacity='0.4', 0);
+      });
+      cardEl.addEventListener('dragend', ()=> cardEl.style.opacity='1');
+      colEl.appendChild(cardEl);
+    });
+
+    const addBtn = document.createElement('div');
+    addBtn.className = 'add-card-btn';
+    addBtn.textContent = '+ Add card';
+    addBtn.onclick = ()=>{ col.cards.push({id:nextCardId++, text:''}); render(); };
+    colEl.appendChild(addBtn);
+
+    colEl.addEventListener('dragover', e=>{ e.preventDefault(); colEl.classList.add('drag-over'); });
+    colEl.addEventListener('dragleave', ()=> colEl.classList.remove('drag-over'));
+    colEl.addEventListener('drop', e=>{
+      e.preventDefault();
+      colEl.classList.remove('drag-over');
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const fromCol = columns.find(c=>c.id===data.fromCol);
+      const cardIdx = fromCol.cards.findIndex(c=>c.id===data.cardId);
+      if (cardIdx<0) return;
+      const [card] = fromCol.cards.splice(cardIdx,1);
+      col.cards.push(card);
+      render();
+    });
+
+    board.appendChild(colEl);
+  });
+
+  const addCol = document.createElement('div');
+  addCol.className = 'add-card-btn add-col';
+  addCol.style.alignSelf = 'flex-start';
+  addCol.style.padding = '14px';
+  addCol.textContent = '+ Add column';
+  addCol.onclick = ()=>{ columns.push({id:nextColId++, name:'New column', cards:[]}); render(); };
+  board.appendChild(addCol);
+}
+render();
+</script>
+</body>
+</html>

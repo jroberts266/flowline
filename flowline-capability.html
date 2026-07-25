@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowline — Process Capability Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .layout2{ display:grid; grid-template-columns:380px 1fr; min-height:calc(100vh - 92px); }
+  @media (max-width:960px){ .layout2{ grid-template-columns:1fr; } }
+  .metric-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .metric-pill{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 16px; min-width:110px; text-align:center;}
+  .metric-pill .l{ font-family:var(--mono); font-size:9.5px; text-transform:uppercase; color:var(--ink-soft);}
+  .metric-pill .v{ font-family:var(--mono); font-size:22px; font-weight:700; }
+  .metric-pill.good .v{ color:var(--accent-pull); }
+  .metric-pill.warn .v{ color:var(--accent-push); }
+  #curve-holder{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:14px; }
+  .note{ font-size:12px; color:var(--ink-soft); line-height:1.6; margin-top:14px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group"><h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+          <div class="menu-group"><h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
+          <div class="menu-group"><h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:var(--accent-pull-soft);color:var(--accent-pull);">Analysis &amp; Quality</span>
+    <h1>Process Capability Calculator</h1>
+    <p>Enter spec limits and your process stats (or paste raw sample data) to get Cp, Cpk, and an estimated sigma level.</p>
+  </div>
+  <button class="btn-ghost no-print" id="btn-print">Print / Save as PDF</button>
+</div>
+
+<div class="layout2">
+  <aside class="panel">
+    <div class="section">
+      <h2>Specification limits</h2>
+      <div class="row2">
+        <div class="field"><label>Lower spec limit (LSL)</label><input type="number" id="in-lsl" value="9.8" step="any"></div>
+        <div class="field"><label>Upper spec limit (USL)</label><input type="number" id="in-usl" value="10.2" step="any"></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Process data</h2>
+      <div class="field">
+        <label>Data source</label>
+        <select id="in-mode">
+          <option value="stats">Enter mean &amp; std dev directly</option>
+          <option value="raw">Paste raw sample data</option>
+        </select>
+      </div>
+      <div id="stats-fields">
+        <div class="row2">
+          <div class="field"><label>Process mean</label><input type="number" id="in-mean" value="10.0" step="any"></div>
+          <div class="field"><label>Std deviation</label><input type="number" id="in-std" value="0.06" step="any"></div>
+        </div>
+      </div>
+      <div id="raw-fields" style="display:none;">
+        <div class="field"><label>Sample values (comma or newline separated)</label>
+          <textarea id="in-raw" style="min-height:110px;" placeholder="10.01, 9.98, 10.03, 9.99, ..."></textarea>
+          <div class="hint">Mean and standard deviation (sample, n-1) are computed automatically.</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div class="metric-row" id="metric-row"></div>
+    <div id="curve-holder"></div>
+    <div class="note">
+      <b>Cp</b> measures whether the spread of your process could fit within spec if centered perfectly. <b>Cpk</b> accounts for how centered it actually is — it's always ≤ Cp. As a rule of thumb: below 1.0 means the process is not capable of meeting spec; 1.33 is a common minimum target; 1.67+ is considered excellent (roughly Six Sigma quality when centered).
+    </div>
+  </main>
+</div>
+
+<footer class="credit">Flowline — data stays in your browser.</footer>
+
+<script src="flowline.js"></script>
+<script>
+function num(id){ return parseFloat(document.getElementById(id).value); }
+
+document.getElementById('in-mode').addEventListener('change', e=>{
+  document.getElementById('stats-fields').style.display = e.target.value==='stats' ? 'block':'none';
+  document.getElementById('raw-fields').style.display = e.target.value==='raw' ? 'block':'none';
+  calc();
+});
+
+function statsFromRaw(text){
+  const vals = text.split(/[\n,]+/).map(s=>parseFloat(s.trim())).filter(v=>!isNaN(v));
+  if (vals.length < 2) return null;
+  const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+  const variance = vals.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(vals.length-1);
+  return { mean, std: Math.sqrt(variance), n: vals.length };
+}
+
+function normPdf(x, mean, std){
+  return (1/(std*Math.sqrt(2*Math.PI))) * Math.exp(-0.5*Math.pow((x-mean)/std,2));
+}
+
+function calc(){
+  const lsl = num('in-lsl'), usl = num('in-usl');
+  const mode = document.getElementById('in-mode').value;
+  let mean, std;
+  if (mode==='raw'){
+    const s = statsFromRaw(document.getElementById('in-raw').value);
+    if (!s){ document.getElementById('metric-row').innerHTML = '<div class="empty-note">Enter at least 2 sample values.</div>'; document.getElementById('curve-holder').innerHTML=''; return; }
+    mean = s.mean; std = s.std;
+  } else {
+    mean = num('in-mean'); std = num('in-std');
+  }
+  if (isNaN(lsl)||isNaN(usl)||isNaN(mean)||isNaN(std)||std<=0){
+    document.getElementById('metric-row').innerHTML = '<div class="empty-note">Fill in valid spec limits and process stats.</div>';
+    document.getElementById('curve-holder').innerHTML=''; return;
+  }
+
+  const cp = (usl-lsl)/(6*std);
+  const cpu = (usl-mean)/(3*std);
+  const cpl = (mean-lsl)/(3*std);
+  const cpk = Math.min(cpu,cpl);
+  const sigmaLevel = cpk*3 + 1.5; // approx long-term sigma level w/ 1.5 shift
+
+  const pill = (label,val,goodIf)=>{
+    const cls = goodIf ? 'good' : 'warn';
+    return `<div class="metric-pill ${cls}"><div class="l">${label}</div><div class="v">${val}</div></div>`;
+  };
+  document.getElementById('metric-row').innerHTML = [
+    pill('Cp', cp.toFixed(2), cp>=1.33),
+    pill('Cpk', cpk.toFixed(2), cpk>=1.33),
+    pill('Mean', mean.toFixed(3), true),
+    pill('Std Dev', std.toFixed(3), true),
+    pill('Sigma level', sigmaLevel.toFixed(2), sigmaLevel>=4.5)
+  ].join('');
+
+  drawCurve(lsl, usl, mean, std);
+}
+
+function drawCurve(lsl, usl, mean, std){
+  const holder = document.getElementById('curve-holder');
+  const W=760,H=280, padL=50, padR=30, padT=20, padB=36;
+  const lo = Math.min(lsl, mean-4*std), hi = Math.max(usl, mean+4*std);
+  const xScale = x => padL + (x-lo)/(hi-lo) * (W-padL-padR);
+  let maxY=0;
+  const pts=[];
+  const N=140;
+  for(let i=0;i<=N;i++){
+    const x = lo + (hi-lo)*i/N;
+    const y = normPdf(x,mean,std);
+    if (y>maxY) maxY=y;
+    pts.push([x,y]);
+  }
+  const yScale = y => (H-padB) - (y/maxY)*(H-padT-padB);
+
+  let path = 'M ' + pts.map(([x,y])=> `${xScale(x).toFixed(1)},${yScale(y).toFixed(1)}`).join(' L ');
+  let outOfSpecPath = 'M ' + pts.filter(([x])=> x<lsl||x>usl).map(([x,y])=>`${xScale(x).toFixed(1)},${yScale(y).toFixed(1)}`).join(' L ');
+
+  const svg = `
+  <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;">
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--ink-faint)" stroke-width="1"/>
+    <path d="${path}" fill="none" stroke="var(--ink)" stroke-width="1.8"/>
+    <line x1="${xScale(lsl)}" y1="${padT}" x2="${xScale(lsl)}" y2="${H-padB}" stroke="var(--accent-push)" stroke-width="1.6" stroke-dasharray="4,3"/>
+    <line x1="${xScale(usl)}" y1="${padT}" x2="${xScale(usl)}" y2="${H-padB}" stroke="var(--accent-push)" stroke-width="1.6" stroke-dasharray="4,3"/>
+    <line x1="${xScale(mean)}" y1="${padT}" x2="${xScale(mean)}" y2="${H-padB}" stroke="var(--accent-pull)" stroke-width="1.4" stroke-dasharray="2,2"/>
+    <text x="${xScale(lsl)}" y="${H-padB+16}" font-size="10.5" fill="var(--accent-push)" text-anchor="middle" font-family="var(--mono)">LSL ${lsl}</text>
+    <text x="${xScale(usl)}" y="${H-padB+16}" font-size="10.5" fill="var(--accent-push)" text-anchor="middle" font-family="var(--mono)">USL ${usl}</text>
+    <text x="${xScale(mean)}" y="${padT-6}" font-size="10.5" fill="var(--accent-pull)" text-anchor="middle" font-family="var(--mono)">mean ${mean.toFixed(3)}</text>
+  </svg>`;
+  holder.innerHTML = svg;
+}
+
+document.querySelectorAll('input, textarea').forEach(el=> el.addEventListener('input', calc));
+calc();
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+</script>
+</body>
+</html>
