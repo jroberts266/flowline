@@ -44,6 +44,7 @@
   <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
   <div class="nav-right">
     <a class="nav-link" href="#tools">Tools</a>
+    <a class="nav-link" href="flowline-account.html">Account</a>
     <div class="dropdown" id="resources-dropdown">
       <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
       <div class="dropdown-menu">
@@ -52,9 +53,11 @@
             <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
             <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
             <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
-            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a></div>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a>
+            <a href="flowline-hourly.html">Hour-by-Hour Board<small>Live production tracking</small></a></div>
           <div class="menu-group"><h5>Analysis &amp; Quality</h5>
             <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-5why.html">5 Whys Analysis<small>Root cause drill-down</small></a>
             <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
             <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
             <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a></div>
@@ -64,10 +67,12 @@
             <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
             <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
             <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
             <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a></div>
         </div>
       </div>
     </div>
+    <span id="account-widget"></span>
   </div>
 </nav>
 
@@ -118,6 +123,9 @@
 
 <footer class="credit">Flowline — data stays in your browser. Nothing is uploaded or stored on a server.</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="flowline-config.js"></script>
+<script src="flowline-auth.js"></script>
 <script src="flowline.js"></script>
 </body>
 </html>
