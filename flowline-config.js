@@ -20,5 +20,9 @@ window.FLOWLINE_CONFIG = {
 
   // Where your serverless functions live once deployed, e.g.
   // "https://your-site.netlify.app/.netlify/functions"
-  FUNCTIONS_BASE_URL: "https://vocal-sherbet-5889b4.netlify.app/.netlify/functions"
+  FUNCTIONS_BASE_URL: "https://vocal-sherbet-5889b4.netlify.app/.netlify/functions",
+
+  // Shown as a fallback "or email us directly" option on the contact page,
+  // and used if Supabase isn't configured yet so the form isn't a dead end.
+  SUPPORT_EMAIL: "hello@yourdomain.com"
 };
