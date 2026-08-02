@@ -137,6 +137,41 @@
     await client.from('saved_items').delete().eq('id', id).eq('user_id', user.id);
   }
 
+  // ---------------- Lead capture (consulting / training interest) ----------------
+  // No login required — same pattern as feedback: public can insert, nobody
+  // (including the submitter) can read back through the public API.
+
+  async function submitLead({ name, email, company, interest, message }){
+    if (!client) throw new Error('Flowline is not connected to Supabase yet — fill in flowline-config.js');
+    if (!email || !email.trim()) throw new Error('Please enter an email address.');
+    const { error } = await client.from('leads').insert({
+      name: name || null,
+      email: email.trim(),
+      company: company || null,
+      interest: interest || 'general',
+      message: message || null,
+      page_url: window.location.href
+    });
+    if (error) throw error;
+  }
+
+  // ---------------- Contact / feedback form ----------------
+  // No login required — this works for anonymous visitors too, since the
+  // feedback table's insert policy allows public submissions.
+
+  async function submitFeedback({ name, email, category, message }){
+    if (!client) throw new Error('Flowline is not connected to Supabase yet — fill in flowline-config.js');
+    if (!message || !message.trim()) throw new Error('Please enter a message.');
+    const { error } = await client.from('feedback').insert({
+      name: name || null,
+      email: email || null,
+      category: category || 'general',
+      message: message.trim(),
+      page_url: window.location.href
+    });
+    if (error) throw error;
+  }
+
   // ---------------- Stripe checkout / billing portal ----------------
 
   async function startCheckout(){
@@ -179,32 +214,23 @@
     }
 
     const user = await getUser();
-    if (!user){
-      el.innerHTML = '';
-      return;
-    }
-    const sub = await getSubscription();
-    if (isPaying(sub)){
-      el.innerHTML = `<span style="font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--accent-pull-soft);color:var(--accent-pull);padding:3px 8px;border-radius:10px;">Pro</span>`;
-    } else if (isTrialActive(sub)){
-      const d = trialDaysLeft(sub);
-      el.innerHTML = `<span style="font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--accent-push-soft);color:var(--accent-push);padding:3px 8px;border-radius:10px;">Trial · ${d}d left</span>`;
-    } else {
-      el.innerHTML = `<span style="font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:#F0F0EA;color:var(--ink-soft);padding:3px 8px;border-radius:10px;">Trial ended</span>`;
-    }
+    el.innerHTML = user
+      ? `<span style="font-size:11.5px;color:var(--ink-faint);">Signed in</span>`
+      : '';
   }
 
-  // ---------------- Tool usage gate ----------------
-  // Pages that require an active trial or paid subscription add
-  // <body data-flowline-gate="tool"> — this runs automatically on those
-  // pages and blocks the tool behind a full-screen message if the visitor
-  // isn't signed in, or their trial has ended and they haven't subscribed.
+  // ---------------- Tool usage gate (currently disabled) ----------------
+  // Flowline moved away from gating tool usage behind a trial/subscription —
+  // every tool is free for everyone now, signed in or not. This function is
+  // left in place (unused) in case a future version wants to reintroduce a
+  // gate; it's simply never called automatically below anymore.
   //
-  // Worth knowing: like any client-side check, this is a product/UX gate,
-  // not a hard security boundary — someone determined could bypass it with
-  // browser dev tools. The actual security boundary is server-side: saving
-  // data requires a real signed-in session and is enforced by Supabase's
-  // row-level security policies regardless of what this overlay shows.
+  // Worth knowing if you ever do turn this back on: like any client-side
+  // check, it's a product/UX gate, not a hard security boundary — someone
+  // determined could bypass it with browser dev tools. The actual security
+  // boundary is server-side: saving data requires a real signed-in session
+  // and is enforced by Supabase's row-level security policies regardless of
+  // what any overlay shows.
 
   function buildGateOverlay(kind){
     const overlay = document.createElement('div');
@@ -255,14 +281,14 @@
     getUser, getSession, signUp, signIn, signOut,
     getSubscription, isActive, isPaying, isTrialActive, trialDaysLeft, canUseTools,
     saveItem, listItems, loadItem, deleteItem,
+    submitFeedback, submitLead,
     startCheckout, openBillingPortal,
     mountAccountWidget, enforceToolGate
   };
 
+  // Note: enforceToolGate() is intentionally not called here anymore — see
+  // the comment above. Every tool page is open to everyone by default now.
   document.addEventListener('DOMContentLoaded', () => {
     mountAccountWidget();
-    if (document.body.hasAttribute('data-flowline-gate')){
-      enforceToolGate();
-    }
   });
 })();

@@ -30,6 +30,10 @@ that serves static files.
 | `flowline-kanban.html` | Kanban visual board |
 | `flowline-kpi.html` | KPI dashboard |
 | `flowline-glossary.html` | Lean & Six Sigma glossary |
+| `flowline-contact.html` | Contact / feedback form (no account needed) |
+| `flowline-services.html` | "Work With Us" — consulting/training lead capture |
+| `flowline-resources.html` | Affiliate resources page (books, courses, tools) |
+| `flowline-terms.html` | Terms & Conditions (template — needs review before real use) |
 | `flowline.css` | Shared design system (used by every page) |
 | `flowline.js` | Shared nav dropdown behavior (used by every page) |
 
@@ -70,6 +74,24 @@ deploys (either), automatic HTTPS, and — if you later add a backend — native
 support for serverless functions, which GitHub Pages doesn't have. Worth
 switching to either if the test run goes well and you want to add accounts,
 billing, or saved data later.
+
+## Accounts, saved data, contact forms, and monetization (optional)
+
+The site works standalone with no backend, exactly as described above.
+Every tool is free to use for everyone, with no account required. If you
+want to add optional accounts (so people can save their work), a contact
+form, and a lead-generation/affiliate setup on top of that, see
+**SETUP.md** — it walks through connecting a free Supabase project and
+deploying through Netlify instead of GitHub Pages (Netlify can run the
+small serverless functions this project includes; GitHub Pages can't).
+Nothing about the base site changes if you skip this — `flowline-config.js`
+ships with placeholder values, and every tool falls back to working exactly
+as described above until you fill them in.
+
+Monetization here comes from lead generation (`flowline-services.html`)
+and affiliate links (`flowline-resources.html`) rather than gating the
+tools themselves — see SETUP.md for what's wired up and what's still
+placeholder content you need to fill in with your actual offer and links.
 
 ## Notes for a public test run
 

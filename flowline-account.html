@@ -37,7 +37,7 @@
 <div class="page-header">
   <div class="titles">
     <h1>My Account</h1>
-    <p>Sign in to save your maps and reports, and to manage your subscription.</p>
+    <p>Sign in to save your maps and reports and pick up where you left off — it's free.</p>
   </div>
 </div>
 
@@ -45,7 +45,7 @@
   <!-- filled in by JS -->
 </div>
 
-<footer class="credit">Flowline</footer>
+<footer class="credit">Flowline · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="flowline-config.js"></script>
@@ -87,30 +87,11 @@ async function render(){
     return;
   }
 
-  const sub = await Flowline.getSubscription();
-  const active = Flowline.isActive(sub);
-  const trialActive = Flowline.isTrialActive(sub);
-  const trialDays = Flowline.trialDaysLeft(sub);
-
-  let badgeClass = 'none', badgeText = 'Free trial ended';
-  let statusNote = 'Your 10-day free trial has ended. Subscribe to keep using the tools and to save your work.';
-  if (active){
-    badgeClass = 'active'; badgeText = 'Pro — active';
-    statusNote = 'You have full access to every tool and can save your work.';
-  } else if (trialActive){
-    badgeClass = 'trial'; badgeText = `Free trial — ${trialDays} day${trialDays===1?'':'s'} left`;
-    statusNote = 'You can use every tool during your trial. Saving to your account requires a Pro subscription.';
-  }
-
   app.innerHTML = `
     <div class="card">
       <h2>Signed in as ${esc(user.email)}</h2>
-      <span class="plan-badge ${badgeClass}">${badgeText}</span>
-      <p style="font-size:12.5px;color:var(--ink-soft);margin:10px 0 0;">${statusNote}</p>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:10px 0 0;">Every tool is free to use, and saving your work here is free too — no subscription required.</p>
       <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
-        ${active
-          ? `<button class="btn-ghost" id="btn-portal">Manage billing</button>`
-          : `<button class="btn-primary" id="btn-upgrade">Upgrade to Pro</button>`}
         <button class="btn-ghost" id="btn-signout">Sign out</button>
       </div>
     </div>
