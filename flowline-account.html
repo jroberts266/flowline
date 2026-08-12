@@ -16,6 +16,7 @@
   .error-msg{ background:var(--accent-push-soft); color:var(--accent-push); border-radius:var(--radius); padding:8px 12px; font-size:12.5px; margin-bottom:12px; display:none; }
   .plan-badge{ display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding:4px 10px; border-radius:12px; }
   .plan-badge.active{ background:var(--accent-pull-soft); color:var(--accent-pull); }
+  .plan-badge.trial{ background:var(--accent-push-soft); color:var(--accent-push); }
   .plan-badge.none{ background:#F0F0EA; color:var(--ink-soft); }
   .saved-row{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--grid); font-size:13px; }
   .saved-row:last-child{ border-bottom:none; }
@@ -36,7 +37,7 @@
 <div class="page-header">
   <div class="titles">
     <h1>My Account</h1>
-    <p>Sign in to save your maps and reports, and to manage your subscription.</p>
+    <p>Sign in to save your maps and reports and pick up where you left off — it's free.</p>
   </div>
 </div>
 
@@ -44,7 +45,7 @@
   <!-- filled in by JS -->
 </div>
 
-<footer class="credit">Flowline</footer>
+<footer class="credit">Flowline · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="flowline-config.js"></script>
@@ -57,7 +58,7 @@ const TOOL_LABELS = {
   'kaizen-charter':'Kaizen Event Charter', fishbone:'Fishbone Diagram', '5why':'5 Whys Analysis',
   yamazumi:'Yamazumi Chart', kpi:'KPI Dashboard', pareto:'Pareto Chart', capability:'Process Capability',
   oee:'OEE Calculation', takt:'Takt Time Calculation', '5s':'5S Audit', kanban:'Kanban Board',
-  hourly:'Hour-by-Hour Board'
+  hourly:'Hour-by-Hour Board', sop:'SOP Document'
 };
 const TOOL_PAGE = {
   vsm:'flowline-vsm.html', 'future-vsm':'flowline-future-vsm.html', a3:'flowline-a3.html',
@@ -65,7 +66,7 @@ const TOOL_PAGE = {
   fishbone:'flowline-fishbone.html', '5why':'flowline-5why.html', yamazumi:'flowline-yamazumi.html',
   kpi:'flowline-kpi.html', pareto:'flowline-pareto.html', capability:'flowline-capability.html',
   oee:'flowline-oee.html', takt:'flowline-takt.html', '5s':'flowline-5s.html', kanban:'flowline-kanban.html',
-  hourly:'flowline-hourly.html'
+  hourly:'flowline-hourly.html', sop:'flowline-sop.html'
 };
 
 async function render(){
@@ -86,17 +87,11 @@ async function render(){
     return;
   }
 
-  const sub = await Flowline.getSubscription();
-  const active = Flowline.isActive(sub);
-
   app.innerHTML = `
     <div class="card">
       <h2>Signed in as ${esc(user.email)}</h2>
-      <span class="plan-badge ${active?'active':'none'}">${active ? 'Pro — active' : 'Free plan'}</span>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:10px 0 0;">Every tool is free to use, and saving your work here is free too — no subscription required.</p>
       <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
-        ${active
-          ? `<button class="btn-ghost" id="btn-portal">Manage billing</button>`
-          : `<button class="btn-primary" id="btn-upgrade">Upgrade to Pro</button>`}
         <button class="btn-ghost" id="btn-signout">Sign out</button>
       </div>
     </div>

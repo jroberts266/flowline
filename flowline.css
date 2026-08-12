@@ -122,6 +122,8 @@ table.mini-table th{ text-align:left; font-family:var(--mono); font-size:9.5px; 
 table.mini-table td{ padding:6px 6px; border-bottom:1px solid var(--grid); vertical-align:middle; }
 
 footer.credit{ text-align:center; font-size:11px; color:var(--ink-faint); padding:18px; border-top:1px solid var(--line); }
+footer.credit a{ color:var(--ink-soft); text-decoration:underline; text-underline-offset:2px; }
+footer.credit a:hover{ color:var(--ink); }
 
 @media print{
   nav.top, aside.panel, .no-print{ display:none !important; }
