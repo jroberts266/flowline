@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flowline — Value Stream Mapper</title>
+<title>Roberts Shop Improvement — Value Stream Mapper</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -167,8 +167,8 @@
 <body>
 <nav class="top">
   <a class="brand" href="index.html">
-    <span class="mark">FL</span>
-    <span class="name">Flowline</span>
+    <span class="mark">RSI</span>
+    <span class="name">Roberts Shop Improvement</span>
   </a>
   <div class="nav-right">
     <a class="nav-link" href="index.html">Home</a>
@@ -202,6 +202,7 @@
             <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
             <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
             <a href="flowline-sop.html">SOP Builder<small>Step-by-step docs with photos &amp; video</small></a>
+            <a href="flowline-sqdc.html">SQDC Dashboard<small>Daily/monthly Safety-Quality-Delivery-Cost</small></a>
             <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
           </div>
         </div>
@@ -216,7 +217,7 @@
   <div class="brand">
     <span class="mark">VSM</span>
     <div>
-      <h1>Flowline</h1>
+      <h1>Roberts Shop Improvement</h1>
       <p>Build a value stream map from real process data — no drawing tools required. Enter your steps on the left; the map updates as you go.</p>
     </div>
   </div>
@@ -321,7 +322,7 @@
   </main>
 </div>
 
-<footer class="credit">Flowline — a guided value stream mapping tool. Data stays in this browser tab. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
+<footer class="credit">Roberts Shop Improvement — a guided value stream mapping tool. Data stays in this browser tab. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
 
 <!-- ===================== Step editor dialog (lightweight, inline) ===================== -->
 <template id="tpl-step-fields"></template>
@@ -942,7 +943,7 @@ let currentSavedId = null;
 
 document.getElementById('btn-save-account').addEventListener('click', async ()=>{
   if (!window.Flowline || !Flowline.configured){
-    alert('This site isn\'t connected to a Flowline account backend yet. See SETUP.md.');
+    alert('This site isn\'t connected to a Roberts Shop Improvement account backend yet. See SETUP.md.');
     return;
   }
   const user = await Flowline.getUser();
@@ -966,7 +967,7 @@ document.getElementById('btn-my-maps').addEventListener('click', async ()=>{
 async function renderSavedMapsPanel(){
   const panel = document.getElementById('saved-maps-panel');
   if (!window.Flowline || !Flowline.configured){
-    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Flowline account backend yet. See SETUP.md.</div>';
+    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Roberts Shop Improvement account backend yet. See SETUP.md.</div>';
     panel.style.display = 'block';
     return;
   }
@@ -1013,7 +1014,7 @@ async function loadSavedMap(id){
   }catch(e){ alert('Could not load that map: ' + e.message); }
 }
 
-// If the page was opened with ?load=<id> (from the account page), load it once Flowline is ready.
+// If the page was opened with ?load=<id> (from the account page), load it once Roberts Shop Improvement is ready.
 window.addEventListener('load', ()=>{
   const params = new URLSearchParams(window.location.search);
   const loadId = params.get('load');

@@ -1,6 +1,6 @@
-# Flowline — Path B setup guide (Supabase + Stripe)
+# Roberts Shop Improvement — Path B setup guide (Supabase + Stripe)
 
-> **Update: Flowline moved away from subscription as its monetization
+> **Update: Roberts Shop Improvement moved away from subscription as its monetization
 > model.** Every tool is now free for everyone, with no trial, no paywall,
 > and no gate on saving — accounts are just a free convenience. The
 > Stripe-related steps below (sections 2, 5, and the Stripe environment
@@ -55,7 +55,7 @@ and pasting keys.
 
 1. Go to [stripe.com](https://stripe.com) and create an account (test mode
    is on by default — perfect for now, you'll flip to live mode later).
-2. Go to **Product catalog → Add product**. Give it a name (e.g. "Flowline
+2. Go to **Product catalog → Add product**. Give it a name (e.g. "Roberts Shop Improvement
    Pro"), set it as **Recurring**, pick your price and billing interval.
 3. Save it, then open the price you just created and copy its **Price ID**
    (starts with `price_...`).
@@ -157,7 +157,7 @@ Supabase's `subscriptions` table.
 **Every tool is free, for everyone, no account required** — Value Stream
 Mapper, Future-State VSM, A3, DMAIC Charter, Kaizen Event Charter, Fishbone,
 5 Whys, Pareto, Process Capability, OEE, Takt Time, Yamazumi, 5S Audit,
-Kanban, KPI Dashboard, and Hour-by-Hour Board. No trial clock, no lockout,
+Kanban, KPI Dashboard, Hour-by-Hour Board, SOP Builder, and SQDC Dashboard. No trial clock, no lockout,
 no upgrade prompt anywhere in the tools themselves.
 
 **Accounts are a free convenience, not a gate.** Signing up (on

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flowline — Work With Us</title>
+<title>Roberts Shop Improvement — Work With Us</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="flowline.css">
@@ -31,7 +31,7 @@
 </head>
 <body>
 <nav class="top">
-  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <a class="brand" href="index.html"><span class="mark">RSI</span><span class="name">Roberts Shop Improvement</span></a>
   <div class="nav-right">
     <a class="nav-link" href="index.html">Home</a>
     <a class="nav-link" href="flowline-account.html">Account</a>
@@ -64,6 +64,7 @@
             <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
             <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
             <a href="flowline-sop.html">SOP Builder<small>Step-by-step docs with photos &amp; video</small></a>
+            <a href="flowline-sqdc.html">SQDC Dashboard<small>Daily/monthly Safety-Quality-Delivery-Cost</small></a>
             <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
           </div>
         </div>
@@ -79,7 +80,7 @@
   </div>
   <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);display:inline-block;margin-bottom:10px;">Work With Us</span>
   <h1>Need more than a free tool?</h1>
-  <p class="sub">Flowline's tools are free for a reason — they're often the starting point. If you want hands-on help implementing Lean or Six Sigma in your organization, here's how we can help.</p>
+  <p class="sub">Roberts Shop Improvement's tools are free for a reason — they're often the starting point. If you want hands-on help implementing Lean or Six Sigma in your organization, here's how we can help.</p>
 </div>
 
 <div class="offer-grid">
@@ -96,7 +97,7 @@
   <div class="offer-card">
     <span class="emoji">🛠️</span>
     <h3>Custom Tools</h3>
-    <p>[Placeholder] Need a Flowline tool tailored to your industry or a specific internal process? We build custom versions for teams that need more than the free tools offer.</p>
+    <p>[Placeholder] Need a Roberts Shop Improvement tool tailored to your industry or a specific internal process? We build custom versions for teams that need more than the free tools offer.</p>
   </div>
 </div>
 
@@ -133,7 +134,7 @@
   </div>
 </div>
 
-<footer class="credit">Flowline — data stays in your browser. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
+<footer class="credit">Roberts Shop Improvement — data stays in your browser. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="flowline-config.js"></script>
@@ -175,7 +176,7 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
 
   if (!window.Flowline || !Flowline.configured){
     if (supportEmail && !supportEmail.includes('yourdomain')){
-      const subject = encodeURIComponent(`Flowline services inquiry — ${interest}`);
+      const subject = encodeURIComponent(`Roberts Shop Improvement services inquiry — ${interest}`);
       const body = encodeURIComponent(`${message}\n\n— ${name || 'Anonymous'} (${email})${company ? ', ' + company : ''}`);
       window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
     } else {

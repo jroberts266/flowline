@@ -1,5 +1,5 @@
 -- ============================================================================
--- Flowline — migration: add lead capture support (Services / consulting page)
+-- Roberts Shop Improvement — migration: add lead capture support (Services / consulting page)
 -- Run this in Supabase SQL Editor if your project already exists. If you're
 -- setting up a brand new project instead, just run the current schema.sql —
 -- it already includes this table.

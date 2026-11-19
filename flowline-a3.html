@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flowline — A3 Problem Solving</title>
+<title>Roberts Shop Improvement — A3 Problem Solving</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -147,8 +147,8 @@
 <body>
 <nav class="top">
   <a class="brand" href="index.html">
-    <span class="mark">FL</span>
-    <span class="name">Flowline</span>
+    <span class="mark">RSI</span>
+    <span class="name">Roberts Shop Improvement</span>
   </a>
   <div class="nav-right">
     <a class="nav-link" href="index.html">Home</a>
@@ -182,6 +182,7 @@
             <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
             <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
             <a href="flowline-sop.html">SOP Builder<small>Step-by-step docs with photos &amp; video</small></a>
+            <a href="flowline-sqdc.html">SQDC Dashboard<small>Daily/monthly Safety-Quality-Delivery-Cost</small></a>
             <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
           </div>
         </div>
@@ -196,12 +197,12 @@
   <div class="brand">
     <span class="mark">A3</span>
     <div>
-      <h1>Flowline · A3</h1>
+      <h1>Roberts Shop Improvement · A3</h1>
       <p>A guided 10-step problem-solving report. Fill in the steps on the left; a printable A3 builds itself on the right.</p>
     </div>
   </div>
   <div class="header-actions">
-    <button class="btn-ghost" id="btn-import-vsm">Import from Flowline VSM (.json)</button>
+    <button class="btn-ghost" id="btn-import-vsm">Import from Roberts Shop Improvement VSM (.json)</button>
     <input type="file" id="file-import" accept="application/json">
     <button class="btn-ghost" id="btn-print">Print / Save as PDF</button>
     <button class="btn-ghost" id="btn-save-account">Save to my account</button>
@@ -217,7 +218,7 @@
   </main>
 </div>
 
-<footer class="credit">Flowline A3 — data stays in this browser tab. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
+<footer class="credit">Roberts Shop Improvement A3 — data stays in this browser tab. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
 
 <script>
 /* ============================================================================
@@ -595,7 +596,7 @@ document.getElementById('file-import').addEventListener('change', (e)=>{
   reader.onload = ()=>{
     try{
       const data = JSON.parse(reader.result);
-      if (data.source !== 'flowline-vsm' || !data.state){ alert('This file does not look like a Flowline VSM export.'); return; }
+      if (data.source !== 'flowline-vsm' || !data.state){ alert('This file does not look like a Roberts Shop Improvement VSM export.'); return; }
       applyVsmImport(data);
     }catch(err){ alert('Could not read that file: ' + err.message); }
   };
@@ -662,7 +663,7 @@ function applySavedData(data){
 }
 
 document.getElementById('btn-save-account').addEventListener('click', async ()=>{
-  if (!window.Flowline || !Flowline.configured){ alert('This site isn\'t connected to a Flowline account backend yet. See SETUP.md.'); return; }
+  if (!window.Flowline || !Flowline.configured){ alert('This site isn\'t connected to a Roberts Shop Improvement account backend yet. See SETUP.md.'); return; }
   const user = await Flowline.getUser();
   if (!user){ window.location.href = 'flowline-account.html'; return; }
   const defaultTitle = state.meta.title || 'Untitled A3';
@@ -684,7 +685,7 @@ document.getElementById('btn-my-items').addEventListener('click', async ()=>{
 async function renderSavedItemsPanel(){
   const panel = document.getElementById('saved-items-panel');
   if (!window.Flowline || !Flowline.configured){
-    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Flowline account backend yet. See SETUP.md.</div>';
+    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Roberts Shop Improvement account backend yet. See SETUP.md.</div>';
     panel.style.display = 'block';
     return;
   }

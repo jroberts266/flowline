@@ -1,5 +1,5 @@
 /* ============================================================================
-   Flowline — public configuration
+   Roberts Shop Improvement — public configuration
    Fill these in with values from your own Supabase and Stripe accounts.
    Everything in this file is safe to be public / visible in the browser —
    the Supabase anon key is designed for client-side use and is protected by
@@ -13,10 +13,10 @@ window.FLOWLINE_CONFIG = {
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0YnlzemhiamFodXV0b2tkY2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5Njg4NDYsImV4cCI6MjEwMDU0NDg0Nn0.M19LsxTUC2PTRv3S7WZPxiBTM7tSWaU-4bNgHyiV-iA",
 
   // Stripe → Developers → API keys (the PUBLISHABLE key, not the secret one)
-  STRIPE_PUBLISHABLE_KEY: "ppk_test_51Tx7LYBUHLeN9mfLBBl2v7A3xqCT4AWlm9gWpaOwKjS0PKgY9TDsxqDTHKFS4HMUabNR28uaRpE6PUW3IhcGqmIS00leHNHRtF",
+  STRIPE_PUBLISHABLE_KEY: "pk_live_or_pk_test_...",
 
   // The Stripe Price ID for your subscription (Product catalog → your product → pricing)
-  STRIPE_PRICE_ID: "price_1Tx7ORBUHLeN9mfL2FgmaJT5",
+  STRIPE_PRICE_ID: "price_...",
 
   // Where your serverless functions live once deployed, e.g.
   // "https://your-site.netlify.app/.netlify/functions"

@@ -1,5 +1,5 @@
 -- ============================================================================
--- Flowline — Supabase schema
+-- Roberts Shop Improvement — Supabase schema
 -- Run this once in your Supabase project: SQL Editor → New query → paste → Run
 -- ============================================================================
 

@@ -1,5 +1,5 @@
 -- ============================================================================
--- Flowline — migration: add contact/feedback form support
+-- Roberts Shop Improvement — migration: add contact/feedback form support
 -- Run this in Supabase SQL Editor if your project already exists (i.e. you
 -- already ran schema.sql and/or migration-trial.sql before). If you're
 -- setting up a brand new project instead, just run the current schema.sql —

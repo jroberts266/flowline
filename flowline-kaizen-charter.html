@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flowline — Kaizen Event Charter</title>
+<title>Roberts Shop Improvement — Kaizen Event Charter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="flowline.css">
@@ -27,7 +27,7 @@
 </head>
 <body>
 <nav class="top">
-  <a class="brand" href="index.html"><span class="mark">FL</span><span class="name">Flowline</span></a>
+  <a class="brand" href="index.html"><span class="mark">RSI</span><span class="name">Roberts Shop Improvement</span></a>
   <div class="nav-right">
     <a class="nav-link" href="index.html">Home</a>
     <a class="nav-link" href="flowline-account.html">Account</a>
@@ -60,6 +60,7 @@
             <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
             <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
             <a href="flowline-sop.html">SOP Builder<small>Step-by-step docs with photos &amp; video</small></a>
+            <a href="flowline-sqdc.html">SQDC Dashboard<small>Daily/monthly Safety-Quality-Delivery-Cost</small></a>
             <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
           </div>
         </div>
@@ -128,7 +129,7 @@
   </main>
 </div>
 
-<footer class="credit">Flowline — data stays in your browser. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
+<footer class="credit">Roberts Shop Improvement — data stays in your browser. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="flowline-config.js"></script>
@@ -223,7 +224,7 @@ function applySavedData(data){
 }
 
 document.getElementById('btn-save-account').addEventListener('click', async ()=>{
-  if (!window.Flowline || !Flowline.configured){ alert('This site isn\'t connected to a Flowline account backend yet. See SETUP.md.'); return; }
+  if (!window.Flowline || !Flowline.configured){ alert('This site isn\'t connected to a Roberts Shop Improvement account backend yet. See SETUP.md.'); return; }
   const user = await Flowline.getUser();
   if (!user){ window.location.href = 'flowline-account.html'; return; }
   const defaultTitle = document.getElementById('f-title').value || 'Untitled Kaizen Event';
@@ -245,7 +246,7 @@ document.getElementById('btn-my-items').addEventListener('click', async ()=>{
 async function renderSavedItemsPanel(){
   const panel = document.getElementById('saved-items-panel');
   if (!window.Flowline || !Flowline.configured){
-    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Flowline account backend yet. See SETUP.md.</div>';
+    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Roberts Shop Improvement account backend yet. See SETUP.md.</div>';
     panel.style.display = 'block';
     return;
   }

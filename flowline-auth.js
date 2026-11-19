@@ -1,5 +1,5 @@
 /* ============================================================================
-   Flowline — shared auth + data layer
+   Roberts Shop Improvement — shared auth + data layer
    Wraps the Supabase JS client so every page can call simple functions
    instead of repeating Supabase boilerplate. Requires flowline-config.js
    and the Supabase JS CDN script to be loaded first.
@@ -26,12 +26,12 @@
   }
 
   async function signUp(email, password){
-    if (!client) throw new Error('Flowline is not connected to Supabase yet — fill in flowline-config.js');
+    if (!client) throw new Error('Roberts Shop Improvement is not connected to Supabase yet — fill in flowline-config.js');
     return client.auth.signUp({ email, password });
   }
 
   async function signIn(email, password){
-    if (!client) throw new Error('Flowline is not connected to Supabase yet — fill in flowline-config.js');
+    if (!client) throw new Error('Roberts Shop Improvement is not connected to Supabase yet — fill in flowline-config.js');
     return client.auth.signInWithPassword({ email, password });
   }
 
@@ -142,7 +142,7 @@
   // (including the submitter) can read back through the public API.
 
   async function submitLead({ name, email, company, interest, message }){
-    if (!client) throw new Error('Flowline is not connected to Supabase yet — fill in flowline-config.js');
+    if (!client) throw new Error('Roberts Shop Improvement is not connected to Supabase yet — fill in flowline-config.js');
     if (!email || !email.trim()) throw new Error('Please enter an email address.');
     const { error } = await client.from('leads').insert({
       name: name || null,
@@ -160,7 +160,7 @@
   // feedback table's insert policy allows public submissions.
 
   async function submitFeedback({ name, email, category, message }){
-    if (!client) throw new Error('Flowline is not connected to Supabase yet — fill in flowline-config.js');
+    if (!client) throw new Error('Roberts Shop Improvement is not connected to Supabase yet — fill in flowline-config.js');
     if (!message || !message.trim()) throw new Error('Please enter a message.');
     const { error } = await client.from('feedback').insert({
       name: name || null,
@@ -220,7 +220,7 @@
   }
 
   // ---------------- Tool usage gate (currently disabled) ----------------
-  // Flowline moved away from gating tool usage behind a trial/subscription —
+  // Roberts Shop Improvement moved away from gating tool usage behind a trial/subscription —
   // every tool is free for everyone now, signed in or not. This function is
   // left in place (unused) in case a future version wants to reintroduce a
   // gate; it's simply never called automatically below anymore.
@@ -242,13 +242,13 @@
     if (kind === 'signup'){
       box.innerHTML = `
         <h2 style="font-family:'IBM Plex Mono',monospace;font-size:18px;margin:0 0 10px;color:#1B2A4A;">Sign up to use this tool</h2>
-        <p style="font-size:13.5px;color:#5A6B8C;line-height:1.6;margin:0 0 20px;">Flowline's tools are free to try for 10 days — no payment info needed. Create an account to get started.</p>
+        <p style="font-size:13.5px;color:#5A6B8C;line-height:1.6;margin:0 0 20px;">Roberts Shop Improvement's tools are free to try for 10 days — no payment info needed. Create an account to get started.</p>
         <a href="flowline-account.html" style="display:inline-block;padding:10px 22px;background:#1B2A4A;color:#fff;border-radius:4px;font-size:13px;font-weight:600;text-decoration:none;">Sign up free</a>
       `;
     } else {
       box.innerHTML = `
         <h2 style="font-family:'IBM Plex Mono',monospace;font-size:18px;margin:0 0 10px;color:#1B2A4A;">Your free trial has ended</h2>
-        <p style="font-size:13.5px;color:#5A6B8C;line-height:1.6;margin:0 0 20px;">Subscribe to keep using Flowline's tools.</p>
+        <p style="font-size:13.5px;color:#5A6B8C;line-height:1.6;margin:0 0 20px;">Subscribe to keep using Roberts Shop Improvement's tools.</p>
         <button id="flowline-gate-upgrade" style="padding:10px 22px;background:#1B2A4A;color:#fff;border-radius:4px;font-size:13px;font-weight:600;border:none;cursor:pointer;">Upgrade to Pro</button>
         <div style="margin-top:12px;"><a href="flowline-account.html" style="font-size:12px;color:#9AA6BE;">Go to my account</a></div>
       `;

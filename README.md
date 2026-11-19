@@ -1,4 +1,4 @@
-# Flowline
+# Roberts Shop Improvement
 
 A set of guided, low-barrier-to-entry Lean & Six Sigma tools. Enter your process
 data once and get a properly formatted diagram, chart, scorecard, or report back
@@ -29,6 +29,8 @@ that serves static files.
 | `flowline-5s.html` | 5S audit scorecard |
 | `flowline-kanban.html` | Kanban visual board |
 | `flowline-kpi.html` | KPI dashboard |
+| `flowline-sop.html` | SOP Builder — step-by-step docs with photos &amp; video |
+| `flowline-sqdc.html` | SQDC Dashboard — daily/monthly Safety-Quality-Delivery-Cost tracking |
 | `flowline-glossary.html` | Lean & Six Sigma glossary |
 | `flowline-contact.html` | Contact / feedback form (no account needed) |
 | `flowline-services.html` | "Work With Us" — consulting/training lead capture |

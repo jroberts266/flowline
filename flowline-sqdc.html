@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roberts Shop Improvement — SQDC Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="flowline.css">
+<style>
+  .cat-tabs{ display:flex; gap:4px; margin-bottom:14px; flex-wrap:wrap; }
+  .cat-tab{ font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:14px; border:1px solid var(--line); background:var(--panel); color:var(--ink-soft); cursor:pointer; }
+  .cat-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .cat-tab .dot{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; }
+
+  .metric-card{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:9px 11px; margin-bottom:8px; }
+  .metric-card .top{ display:flex; justify-content:space-between; align-items:center; }
+  .metric-card .name{ font-weight:600; font-size:12.5px; }
+  .metric-card .meta{ font-size:10.5px; color:var(--ink-faint); margin-top:2px; font-family:var(--mono); }
+  .metric-card .acts{ display:flex; gap:4px; }
+
+  .view-toggle{ display:flex; gap:4px; }
+  .view-toggle button{ font-size:11.5px; padding:6px 12px; border:1px solid var(--line); background:var(--panel); color:var(--ink-soft); border-radius:4px; }
+  .view-toggle button.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .summary-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  @media (max-width:900px){ .summary-grid{ grid-template-columns:1fr 1fr; } }
+  .cat-summary{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+  .cat-summary h3{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin:0 0 10px; display:flex; align-items:center; gap:7px; }
+  .cat-summary h3 .dot{ width:9px; height:9px; border-radius:50%; }
+  .mini-metric{ display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; border-bottom:1px solid var(--grid); font-size:12px; }
+  .mini-metric:last-child{ border-bottom:none; }
+  .mini-metric .v{ font-family:var(--mono); font-weight:700; }
+  .mini-metric .v.good{ color:var(--accent-pull); }
+  .mini-metric .v.bad{ color:var(--accent-push); }
+
+  .chart-block{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; }
+  .chart-block .chart-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .chart-block .chart-head h4{ font-size:13.5px; margin:0; }
+  .chart-block .chart-head .goal-label{ font-family:var(--mono); font-size:10.5px; color:var(--ink-soft); }
+
+  .entry-day-row{ display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+  .entry-metric{ border:1px solid var(--line); border-radius:4px; padding:8px 9px; margin-bottom:6px; }
+  .entry-metric .lbl{ font-size:11.5px; font-weight:600; margin-bottom:5px; }
+  .entry-metric .inputs-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .entry-metric .inputs-row div{ flex:1; min-width:90px; }
+  .entry-metric .inputs-row label{ font-size:9.5px; color:var(--ink-soft); display:block; margin-bottom:2px; }
+  .entry-metric .computed{ font-family:var(--mono); font-size:11px; color:var(--ink-soft); margin-top:4px; }
+
+  .modal-overlay{ position:fixed; inset:0; background:rgba(27,42,74,0.35); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px; }
+  .modal-box{ background:#fff; border-radius:6px; padding:22px; width:400px; max-width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25); font-size:13px; }
+  .sub-input-row{ display:flex; gap:6px; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a class="brand" href="index.html"><span class="mark">RSI</span><span class="name">Roberts Shop Improvement</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="flowline-account.html">Account</a>
+    <div class="dropdown" id="resources-dropdown">
+      <button class="dropdown-btn" id="resources-btn" type="button">Resources <span class="chev">▼</span></button>
+      <div class="dropdown-menu">
+        <div class="menu-cols">
+          <div class="menu-group">
+            <h5>Mapping &amp; Flow</h5>
+            <a href="flowline-vsm.html">Value Stream Mapper<small>Current-state VSM from process data</small></a>
+            <a href="flowline-future-vsm.html">Future-State VSM<small>Target state &amp; gap summary</small></a>
+            <a href="flowline-yamazumi.html">Yamazumi Chart<small>Operator balance vs. takt</small></a>
+            <a href="flowline-takt.html">Takt Time Calculator<small>Quick demand &amp; takt math</small></a>
+            <a href="flowline-hourly.html">Hour-by-Hour Board<small>Live production tracking</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Analysis &amp; Quality</h5>
+            <a href="flowline-fishbone.html">Ishikawa / Fishbone<small>Root cause diagram</small></a>
+            <a href="flowline-5why.html">5 Whys Analysis<small>Root cause drill-down</small></a>
+            <a href="flowline-pareto.html">Pareto Chart<small>Vital-few issue ranking</small></a>
+            <a href="flowline-capability.html">Process Capability<small>Cp / Cpk calculator</small></a>
+            <a href="flowline-oee.html">OEE Calculator<small>Availability x Performance x Quality</small></a>
+          </div>
+          <div class="menu-group">
+            <h5>Plan &amp; Manage</h5>
+            <a href="flowline-a3.html">A3 Problem Solving<small>Guided 10-step report</small></a>
+            <a href="flowline-dmaic.html">DMAIC Charter<small>Six Sigma project charter</small></a>
+            <a href="flowline-kaizen-charter.html">Kaizen Event Charter<small>Rapid improvement event plan</small></a>
+            <a href="flowline-5s.html">5S Audit Scorecard<small>Workplace organization score</small></a>
+            <a href="flowline-kanban.html">Kanban Board<small>Visual work board</small></a>
+            <a href="flowline-kpi.html">KPI Dashboard<small>Track metrics against target</small></a>
+            <a href="flowline-sop.html">SOP Builder<small>Step-by-step docs with photos &amp; video</small></a>
+            <a href="flowline-sqdc.html">SQDC Dashboard<small>Daily/monthly Safety-Quality-Delivery-Cost</small></a>
+            <a href="flowline-glossary.html">Glossary<small>Lean &amp; Six Sigma terms</small></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span id="account-widget"></span>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="titles">
+    <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);">Plan &amp; Manage</span>
+    <h1>SQDC Dashboard</h1>
+    <p>Track Safety, Quality, Delivery, and Cost metrics daily, roll them up monthly, and see each one against its goal.</p>
+  </div>
+  <div class="stat-row no-print">
+    <button class="btn-ghost" id="btn-save-account">Save to my account</button>
+    <button class="btn-ghost" id="btn-my-items">My saved dashboards</button>
+  </div>
+</div>
+<div id="saved-items-panel" class="no-print" style="max-width:1200px;margin:0 auto;padding:0 24px;display:none;"></div>
+
+<div class="layout">
+  <aside class="panel">
+    <div class="section">
+      <h2>Log data for a day</h2>
+      <div class="entry-day-row">
+        <div class="field" style="flex:1;margin-bottom:0;"><label>Date</label><input type="date" id="in-entry-date"></div>
+      </div>
+      <div id="entry-form"></div>
+    </div>
+
+    <div class="section">
+      <h2>Metrics by category</h2>
+      <div class="cat-tabs" id="editor-cat-tabs"></div>
+      <div id="metrics-editor"></div>
+      <button class="btn-primary" type="button" id="btn-add-metric">+ Add metric</button>
+    </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div class="stat-row" style="margin-bottom:16px;justify-content:space-between;">
+      <div class="view-toggle" id="view-toggle">
+        <button data-mode="daily" class="active">Daily (by day)</button>
+        <button data-mode="monthly">Monthly (by month)</button>
+      </div>
+      <div class="field" style="margin-bottom:0;" id="period-picker"></div>
+    </div>
+
+    <div class="summary-grid" id="summary-grid"></div>
+    <div id="charts-wrap"></div>
+  </main>
+</div>
+
+<footer class="credit">Roberts Shop Improvement — data stays in your browser. · <a href="flowline-terms.html">Terms &amp; Conditions</a> · <a href="flowline-contact.html">Contact / Feedback</a> · <a href="flowline-services.html">Work With Us</a> · <a href="flowline-resources.html">Resources We Recommend</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="flowline-config.js"></script>
+<script src="flowline-auth.js"></script>
+<script src="flowline.js"></script>
+<script>
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function uid(){ return 'm' + Math.random().toString(36).slice(2,9); }
+function todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function monthStr(dateStr){ return (dateStr||todayStr()).slice(0,7); }
+
+const CATEGORIES = ['Safety','Quality','Delivery','Cost'];
+const CAT_COLOR = { Safety:'var(--accent-push)', Quality:'var(--purple)', Delivery:'var(--accent-pull)', Cost:'var(--accent-kaizen-ink,#8a6b00)' };
+
+let state = {
+  metrics: [
+    { id:uid(), category:'Safety', name:'Recordable Incidents', unit:'count', goal:0, goalDirection:'lower', calcType:'direct', inputs:[{key:'v',label:'Incidents'}], multiplier:1, rollup:'sum' },
+    { id:uid(), category:'Quality', name:'First Pass Yield', unit:'%', goal:95, goalDirection:'higher', calcType:'ratio', inputs:[{key:'good',label:'Good units'},{key:'total',label:'Total units'}], multiplier:100, rollup:'average' },
+    { id:uid(), category:'Delivery', name:'On-Time Delivery', unit:'%', goal:98, goalDirection:'higher', calcType:'ratio', inputs:[{key:'ontime',label:'On-time shipments'},{key:'total',label:'Total shipments'}], multiplier:100, rollup:'average' },
+    { id:uid(), category:'Cost', name:'Scrap Cost', unit:'$', goal:500, goalDirection:'lower', calcType:'sum', inputs:[{key:'material',label:'Material scrap $'},{key:'labor',label:'Labor scrap $'}], multiplier:1, rollup:'sum' }
+  ],
+  dailyData: {}, // { 'YYYY-MM-DD': { metricId: { key: number } } }
+  viewMode: 'daily',
+  viewMonth: monthStr(),
+  viewYear: new Date().getFullYear()
+};
+let editorCat = 'Safety';
+
+/* ============================================================================
+   CALCULATION HELPERS
+============================================================================ */
+function computeValue(metric, dayValues){
+  if (!dayValues) return null;
+  if (metric.calcType === 'direct'){
+    const v = dayValues[metric.inputs[0].key];
+    return (v===undefined||v===null||v==='') ? null : parseFloat(v);
+  }
+  if (metric.calcType === 'ratio'){
+    const num = parseFloat(dayValues[metric.inputs[0].key]);
+    const den = parseFloat(dayValues[metric.inputs[1].key]);
+    if (isNaN(num) || isNaN(den) || den===0) return null;
+    return (num/den) * metric.multiplier;
+  }
+  if (metric.calcType === 'sum'){
+    let has = false, total = 0;
+    metric.inputs.forEach(inp=>{
+      const v = parseFloat(dayValues[inp.key]);
+      if (!isNaN(v)){ total += v; has = true; }
+    });
+    return has ? total : null;
+  }
+  if (metric.calcType === 'difference'){
+    const a = parseFloat(dayValues[metric.inputs[0].key]);
+    const b = parseFloat(dayValues[metric.inputs[1].key]);
+    if (isNaN(a) || isNaN(b)) return null;
+    return a - b;
+  }
+  return null;
+}
+
+function rollup(metric, values){
+  if (values.length===0) return null;
+  if (metric.rollup === 'sum') return values.reduce((a,b)=>a+b,0);
+  if (metric.rollup === 'last') return values[values.length-1];
+  return values.reduce((a,b)=>a+b,0) / values.length; // average (default)
+}
+
+function daysInMonth(ym){
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
+function valuesForMonth(metric, ym){
+  const n = daysInMonth(ym);
+  const out = [];
+  for (let d=1; d<=n; d++){
+    const date = `${ym}-${String(d).padStart(2,'0')}`;
+    const v = computeValue(metric, (state.dailyData[date]||{})[metric.id]);
+    out.push({ date, day:d, value:v });
+  }
+  return out;
+}
+
+function valuesForYear(metric, year){
+  const out = [];
+  for (let m=1; m<=12; m++){
+    const ym = `${year}-${String(m).padStart(2,'0')}`;
+    const dayVals = valuesForMonth(metric, ym).map(x=>x.value).filter(v=>v!=null);
+    out.push({ ym, month:m, value: dayVals.length ? rollup(metric, dayVals) : null });
+  }
+  return out;
+}
+
+function meetsGoal(metric, value){
+  if (value==null) return null;
+  return metric.goalDirection === 'lower' ? value <= metric.goal : value >= metric.goal;
+}
+
+/* ============================================================================
+   METRIC EDITOR (sidebar list + add/edit modal)
+============================================================================ */
+function renderEditorTabs(){
+  const wrap = document.getElementById('editor-cat-tabs');
+  wrap.innerHTML = CATEGORIES.map(c=>`<span class="cat-tab ${c===editorCat?'active':''}" data-cat="${c}"><span class="dot" style="background:${CAT_COLOR[c]}"></span>${c}</span>`).join('');
+  wrap.querySelectorAll('.cat-tab').forEach(t=>{
+    t.onclick = ()=>{ editorCat = t.dataset.cat; renderEditorTabs(); renderMetricsEditor(); };
+  });
+}
+
+function renderMetricsEditor(){
+  const wrap = document.getElementById('metrics-editor');
+  const list = state.metrics.filter(m=>m.category===editorCat);
+  wrap.innerHTML = '';
+  if (list.length===0){ wrap.innerHTML = '<div class="empty-note">No metrics in this category yet.</div>'; }
+  list.forEach(m=>{
+    const card = document.createElement('div'); card.className='metric-card';
+    card.innerHTML = `
+      <div class="top">
+        <div>
+          <div class="name">${esc(m.name)}</div>
+          <div class="meta">${m.calcType} · goal ${m.goalDirection==='lower'?'≤':'≥'} ${m.goal}${esc(m.unit)}</div>
+        </div>
+        <div class="acts">
+          <button class="btn-mini" data-act="edit">✎</button>
+          <button class="btn-mini" data-act="del">✕</button>
+        </div>
+      </div>`;
+    card.querySelector('[data-act="edit"]').onclick = ()=> openMetricModal(m);
+    card.querySelector('[data-act="del"]').onclick = ()=>{
+      if (!confirm(`Remove "${m.name}"? Logged data for it will no longer be shown.`)) return;
+      state.metrics = state.metrics.filter(x=>x.id!==m.id);
+      renderAll();
+    };
+    wrap.appendChild(card);
+  });
+}
+
+document.getElementById('btn-add-metric').onclick = ()=> openMetricModal(null);
+
+function openMetricModal(metric){
+  const isNew = !metric;
+  const m = metric || { id:uid(), category:editorCat, name:'', unit:'', goal:0, goalDirection:'higher', calcType:'direct', inputs:[{key:'v',label:'Value'}], multiplier:1, rollup:'average' };
+  let draftInputs = m.inputs.map(i=>({...i}));
+
+  const overlay = document.createElement('div'); overlay.className='modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <h3 style="margin:0 0 14px;font-family:var(--mono);font-size:14px;">${isNew?'Add metric':'Edit metric'}</h3>
+      <div class="field"><label>Category</label>
+        <select id="md-cat">${CATEGORIES.map(c=>`<option value="${c}" ${c===m.category?'selected':''}>${c}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Metric name</label><input type="text" id="md-name" value="${esc(m.name)}" placeholder="e.g. First Pass Yield"></div>
+      <div class="row2">
+        <div class="field"><label>Unit</label><input type="text" id="md-unit" value="${esc(m.unit)}" placeholder="%, $, count"></div>
+        <div class="field"><label>Goal value</label><input type="number" id="md-goal" value="${m.goal}" step="any"></div>
+      </div>
+      <div class="field"><label>Goal direction</label>
+        <select id="md-dir">
+          <option value="higher" ${m.goalDirection==='higher'?'selected':''}>Higher is better (≥ goal)</option>
+          <option value="lower" ${m.goalDirection==='lower'?'selected':''}>Lower is better (≤ goal)</option>
+        </select>
+      </div>
+      <div class="field"><label>How is this metric calculated?</label>
+        <select id="md-calc">
+          <option value="direct" ${m.calcType==='direct'?'selected':''}>Direct entry — one number, entered as-is</option>
+          <option value="ratio" ${m.calcType==='ratio'?'selected':''}>Ratio — A ÷ B × multiplier (e.g. rate or %)</option>
+          <option value="sum" ${m.calcType==='sum'?'selected':''}>Sum — add up 2+ entered numbers</option>
+          <option value="difference" ${m.calcType==='difference'?'selected':''}>Difference — A − B</option>
+        </select>
+      </div>
+      <div class="field" id="md-multiplier-field" style="display:${m.calcType==='ratio'?'block':'none'};">
+        <label>Multiplier (use 100 for a percentage)</label><input type="number" id="md-multiplier" value="${m.multiplier}" step="any">
+      </div>
+      <div class="field">
+        <label>Input fields entered each day</label>
+        <div id="md-inputs-list"></div>
+        <button class="btn-mini" type="button" id="md-add-input" style="margin-top:4px;">+ Add input field</button>
+        <div class="hint">"Direct" needs exactly 1. "Ratio" and "Difference" need exactly 2 (first ÷ or − second). "Sum" can have 2 or more.</div>
+      </div>
+      <div class="field"><label>When rolling up to a month, this metric should be:</label>
+        <select id="md-rollup">
+          <option value="average" ${m.rollup==='average'?'selected':''}>Averaged across the days</option>
+          <option value="sum" ${m.rollup==='sum'?'selected':''}>Summed across the days</option>
+          <option value="last" ${m.rollup==='last'?'selected':''}>The last value entered that month</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button class="btn-primary" id="md-save" style="margin-top:0;">Save metric</button>
+        <button class="btn-ghost" id="md-cancel">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  function renderInputsList(){
+    const wrap = overlay.querySelector('#md-inputs-list');
+    wrap.innerHTML = '';
+    draftInputs.forEach((inp,i)=>{
+      const row = document.createElement('div'); row.className='sub-input-row';
+      row.innerHTML = `<input type="text" value="${esc(inp.label)}" placeholder="Label, e.g. Good units" style="flex:1;"><button class="btn-mini" type="button">✕</button>`;
+      row.querySelector('input').oninput = e=>{ draftInputs[i].label = e.target.value; };
+      row.querySelector('button').onclick = ()=>{ if (draftInputs.length>1){ draftInputs.splice(i,1); renderInputsList(); } };
+      wrap.appendChild(row);
+    });
+  }
+  renderInputsList();
+
+  overlay.querySelector('#md-calc').onchange = (e)=>{
+    const calc = e.target.value;
+    overlay.querySelector('#md-multiplier-field').style.display = calc==='ratio' ? 'block' : 'none';
+    if (calc==='direct' && draftInputs.length!==1) draftInputs = [{key:'v',label:draftInputs[0]?.label || 'Value'}];
+    if ((calc==='ratio'||calc==='difference') && draftInputs.length<2){
+      while (draftInputs.length<2) draftInputs.push({key:'k'+draftInputs.length, label:''});
+    }
+    if ((calc==='ratio'||calc==='difference') && draftInputs.length>2) draftInputs = draftInputs.slice(0,2);
+    renderInputsList();
+  };
+
+  overlay.querySelector('#md-add-input').onclick = ()=>{
+    draftInputs.push({ key:'k'+Date.now(), label:'' });
+    renderInputsList();
+  };
+
+  overlay.querySelector('#md-cancel').onclick = ()=> overlay.remove();
+  overlay.addEventListener('click', e=>{ if (e.target===overlay) overlay.remove(); });
+
+  overlay.querySelector('#md-save').onclick = ()=>{
+    const calc = overlay.querySelector('#md-calc').value;
+    const cleanInputs = draftInputs.map((inp,i)=>({ key: inp.key || ('k'+i), label: inp.label.trim() || `Value ${i+1}` }));
+    if ((calc==='ratio'||calc==='difference') && cleanInputs.length!==2){ alert('This calculation type needs exactly 2 input fields.'); return; }
+    if (calc==='direct' && cleanInputs.length!==1){ alert('Direct entry needs exactly 1 input field.'); return; }
+    if (calc==='sum' && cleanInputs.length<2){ alert('Sum needs at least 2 input fields.'); return; }
+
+    m.category = overlay.querySelector('#md-cat').value;
+    m.name = overlay.querySelector('#md-name').value.trim() || 'Untitled metric';
+    m.unit = overlay.querySelector('#md-unit').value.trim();
+    m.goal = parseFloat(overlay.querySelector('#md-goal').value) || 0;
+    m.goalDirection = overlay.querySelector('#md-dir').value;
+    m.calcType = calc;
+    m.multiplier = parseFloat(overlay.querySelector('#md-multiplier').value) || 1;
+    m.inputs = cleanInputs;
+    m.rollup = overlay.querySelector('#md-rollup').value;
+
+    if (isNew) state.metrics.push(m);
+    editorCat = m.category;
+    overlay.remove();
+    renderAll();
+  };
+}
+
+/* ============================================================================
+   DAILY DATA ENTRY FORM
+============================================================================ */
+function renderEntryForm(){
+  const date = document.getElementById('in-entry-date').value || todayStr();
+  const wrap = document.getElementById('entry-form');
+  wrap.innerHTML = '';
+  if (!state.dailyData[date]) state.dailyData[date] = {};
+
+  CATEGORIES.forEach(cat=>{
+    const metrics = state.metrics.filter(m=>m.category===cat);
+    if (metrics.length===0) return;
+    const catHeader = document.createElement('div');
+    catHeader.style.cssText = `font-family:var(--mono);font-size:9.5px;text-transform:uppercase;color:${CAT_COLOR[cat]};font-weight:700;margin:10px 0 4px;`;
+    catHeader.textContent = cat;
+    wrap.appendChild(catHeader);
+
+    metrics.forEach(m=>{
+      if (!state.dailyData[date][m.id]) state.dailyData[date][m.id] = {};
+      const card = document.createElement('div'); card.className='entry-metric';
+      const inputsHtml = m.inputs.map(inp=>`
+        <div><label>${esc(inp.label)}</label><input type="number" step="any" data-metric="${m.id}" data-key="${inp.key}" value="${state.dailyData[date][m.id][inp.key] ?? ''}"></div>
+      `).join('');
+      card.innerHTML = `<div class="lbl">${esc(m.name)}</div><div class="inputs-row">${inputsHtml}</div><div class="computed" id="computed-${m.id}"></div>`;
+      wrap.appendChild(card);
+
+      card.querySelectorAll('input').forEach(inp=>{
+        inp.oninput = ()=>{
+          state.dailyData[date][m.id][inp.dataset.key] = inp.value === '' ? undefined : parseFloat(inp.value);
+          updateComputedLabel(m, date);
+          renderAll(false);
+        };
+      });
+      updateComputedLabel(m, date);
+    });
+  });
+}
+
+function updateComputedLabel(metric, date){
+  const el = document.getElementById(`computed-${metric.id}`);
+  if (!el) return;
+  const v = computeValue(metric, state.dailyData[date][metric.id]);
+  el.textContent = v==null ? '' : `= ${Math.round(v*100)/100}${metric.unit}`;
+}
+
+document.getElementById('in-entry-date').value = todayStr();
+document.getElementById('in-entry-date').addEventListener('input', renderEntryForm);
+
+/* ============================================================================
+   PERIOD PICKER + VIEW TOGGLE
+============================================================================ */
+function renderPeriodPicker(){
+  const wrap = document.getElementById('period-picker');
+  if (state.viewMode === 'daily'){
+    wrap.innerHTML = `<input type="month" id="in-view-month" value="${state.viewMonth}">`;
+    document.getElementById('in-view-month').oninput = e=>{ state.viewMonth = e.target.value; renderAll(false); };
+  } else {
+    wrap.innerHTML = `<input type="number" id="in-view-year" value="${state.viewYear}" style="width:90px;">`;
+    document.getElementById('in-view-year').oninput = e=>{ state.viewYear = parseInt(e.target.value)||state.viewYear; renderAll(false); };
+  }
+}
+
+document.querySelectorAll('#view-toggle button').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('#view-toggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.viewMode = btn.dataset.mode;
+    renderPeriodPicker();
+    renderAll(false);
+  };
+});
+
+/* ============================================================================
+   SUMMARY CARDS
+============================================================================ */
+function currentPeriodValue(metric){
+  if (state.viewMode === 'daily'){
+    const vals = valuesForMonth(metric, state.viewMonth).map(x=>x.value).filter(v=>v!=null);
+    return vals.length ? rollup(metric, vals) : null;
+  } else {
+    const vals = valuesForYear(metric, state.viewYear).map(x=>x.value).filter(v=>v!=null);
+    return vals.length ? rollup(metric, vals) : null;
+  }
+}
+
+function renderSummary(){
+  const grid = document.getElementById('summary-grid');
+  grid.innerHTML = CATEGORIES.map(cat=>{
+    const metrics = state.metrics.filter(m=>m.category===cat);
+    const rows = metrics.map(m=>{
+      const v = currentPeriodValue(m);
+      const ok = meetsGoal(m, v);
+      const cls = ok===null ? '' : (ok ? 'good':'bad');
+      return `<div class="mini-metric"><span>${esc(m.name)}</span><span class="v ${cls}">${v==null?'—':Math.round(v*100)/100}${esc(m.unit)}</span></div>`;
+    }).join('') || '<div class="empty-note" style="padding:8px;">No metrics yet.</div>';
+    return `<div class="cat-summary"><h3><span class="dot" style="background:${CAT_COLOR[cat]}"></span>${cat}</h3>${rows}</div>`;
+  }).join('');
+}
+
+/* ============================================================================
+   CHARTS (bar chart + goal line per metric)
+============================================================================ */
+function drawChart(metric){
+  const points = state.viewMode==='daily' ? valuesForMonth(metric, state.viewMonth) : valuesForYear(metric, state.viewYear);
+  const W = Math.max(500, points.length*36), H=200, padL=44, padR=20, padT=16, padB=30;
+  const vals = points.map(p=>p.value).filter(v=>v!=null);
+  const maxVal = Math.max(metric.goal, ...(vals.length?vals:[0])) * 1.2 || 10;
+  const barGap = (W-padL-padR)/points.length;
+  const barW = Math.min(22, barGap*0.6);
+  const yScale = v => (H-padB) - (v/maxVal)*(H-padT-padB);
+  const goalY = yScale(metric.goal);
+  const color = CAT_COLOR[metric.category];
+
+  let bars = '';
+  points.forEach((p,i)=>{
+    const cx = padL + barGap*i + barGap/2;
+    const label = state.viewMode==='daily' ? p.day : ['J','F','M','A','M','J','J','A','S','O','N','D'][p.month-1];
+    if (p.value!=null){
+      const ok = meetsGoal(metric, p.value);
+      const barColor = ok===null ? color : (ok ? 'var(--accent-pull)' : 'var(--accent-push)');
+      const h = (H-padB) - yScale(p.value);
+      bars += `<rect x="${cx-barW/2}" y="${yScale(p.value)}" width="${barW}" height="${h}" fill="${barColor}"/>`;
+    }
+    bars += `<text x="${cx}" y="${H-padB+14}" font-size="9" text-anchor="middle" fill="var(--ink-soft)" font-family="var(--mono)">${label}</text>`;
+  });
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;">
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--ink-faint)"/>
+    ${bars}
+    <line x1="${padL}" y1="${goalY}" x2="${W-padR}" y2="${goalY}" stroke="var(--ink)" stroke-width="1.4" stroke-dasharray="5,3"/>
+    <text x="${W-padR}" y="${goalY-5}" font-size="10" text-anchor="end" font-family="var(--mono)" fill="var(--ink)">Goal: ${metric.goal}${esc(metric.unit)}</text>
+  </svg>`;
+}
+
+function renderCharts(){
+  const wrap = document.getElementById('charts-wrap');
+  wrap.innerHTML = '';
+  CATEGORIES.forEach(cat=>{
+    const metrics = state.metrics.filter(m=>m.category===cat);
+    metrics.forEach(m=>{
+      const block = document.createElement('div'); block.className='chart-block';
+      block.innerHTML = `<div class="chart-head"><h4>${esc(cat)} — ${esc(m.name)}</h4><span class="goal-label">${m.goalDirection==='lower'?'Lower is better':'Higher is better'}</span></div>${drawChart(m)}`;
+      wrap.appendChild(block);
+    });
+  });
+  if (state.metrics.length===0) wrap.innerHTML = '<div class="empty-note">Add a metric to see its chart here.</div>';
+}
+
+/* ============================================================================
+   RENDER ALL
+============================================================================ */
+function renderAll(rebuildEntryForm){
+  if (rebuildEntryForm !== false) renderEntryForm();
+  renderEditorTabs();
+  renderMetricsEditor();
+  renderSummary();
+  renderCharts();
+}
+
+/* ============================================================================
+   SAVE TO ACCOUNT / MY SAVED DASHBOARDS
+============================================================================ */
+let currentSavedId = null;
+const SAVE_TOOL_KEY = 'sqdc';
+
+function gatherSaveData(){
+  return { metrics: state.metrics, dailyData: state.dailyData, viewMonth: state.viewMonth, viewYear: state.viewYear };
+}
+function applySavedData(data){
+  state.metrics = data.metrics || [];
+  state.dailyData = data.dailyData || {};
+  state.viewMonth = data.viewMonth || monthStr();
+  state.viewYear = data.viewYear || new Date().getFullYear();
+  editorCat = state.metrics[0] ? state.metrics[0].category : 'Safety';
+  renderPeriodPicker();
+  renderAll();
+}
+
+document.getElementById('btn-save-account').addEventListener('click', async ()=>{
+  if (!window.Flowline || !Flowline.configured){ alert('This site isn\'t connected to a Roberts Shop Improvement account backend yet. See SETUP.md.'); return; }
+  const user = await Flowline.getUser();
+  if (!user){ window.location.href = 'flowline-account.html'; return; }
+  const defaultTitle = `SQDC — ${state.metrics.length} metrics`;
+  const title = prompt('Name this dashboard:', defaultTitle);
+  if (title === null) return;
+  try{
+    const row = await Flowline.saveItem(SAVE_TOOL_KEY, title || defaultTitle, gatherSaveData(), currentSavedId);
+    currentSavedId = row.id;
+    alert('Saved.');
+  }catch(e){ alert('Could not save: ' + e.message); }
+});
+
+document.getElementById('btn-my-items').addEventListener('click', async ()=>{
+  const panel = document.getElementById('saved-items-panel');
+  if (panel.style.display === 'block'){ panel.style.display='none'; return; }
+  await renderSavedItemsPanel();
+});
+
+async function renderSavedItemsPanel(){
+  const panel = document.getElementById('saved-items-panel');
+  if (!window.Flowline || !Flowline.configured){
+    panel.innerHTML = '<div class="empty-note">This site isn\'t connected to a Roberts Shop Improvement account backend yet. See SETUP.md.</div>';
+    panel.style.display = 'block';
+    return;
+  }
+  const user = await Flowline.getUser();
+  if (!user){ window.location.href = 'flowline-account.html'; return; }
+  panel.innerHTML = 'Loading…';
+  panel.style.display = 'block';
+  const items = await Flowline.listItems(SAVE_TOOL_KEY);
+  if (items.length === 0){
+    panel.innerHTML = '<div class="empty-note">No saved dashboards yet.</div>';
+    return;
+  }
+  panel.innerHTML = items.map(i => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--grid);font-size:12.5px;">
+      <span>${esc(i.title)} <span style="color:var(--ink-faint);font-size:11px;">— ${new Date(i.updated_at).toLocaleDateString()}</span></span>
+      <span style="display:flex;gap:6px;">
+        <button class="btn-mini" data-open="${i.id}">Open</button>
+        <button class="btn-mini" data-del="${i.id}">✕</button>
+      </span>
+    </div>`).join('');
+  panel.querySelectorAll('[data-open]').forEach(btn=>{
+    btn.onclick = ()=> loadSavedEntry(btn.dataset.open);
+  });
+  panel.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick = async ()=>{ await Flowline.deleteItem(btn.dataset.del); renderSavedItemsPanel(); };
+  });
+}
+
+async function loadSavedEntry(id){
+  try{
+    const row = await Flowline.loadItem(id);
+    applySavedData(row.data);
+    currentSavedId = row.id;
+    document.getElementById('saved-items-panel').style.display = 'none';
+  }catch(e){ alert('Could not load: ' + e.message); }
+}
+
+window.addEventListener('load', ()=>{
+  const params = new URLSearchParams(window.location.search);
+  const loadId = params.get('load');
+  if (loadId && window.Flowline){
+    Flowline.getUser().then(user=>{ if (user) loadSavedEntry(loadId); });
+  }
+});
+
+/* init */
+renderPeriodPicker();
+renderAll();
+</script>
+</body>
+</html>

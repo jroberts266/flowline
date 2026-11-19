@@ -1,5 +1,5 @@
 -- ============================================================================
--- Flowline — migration: add 10-day free trial support
+-- Roberts Shop Improvement — migration: add 10-day free trial support
 -- Run this in Supabase SQL Editor if you already ran the original schema.sql
 -- (i.e. your subscriptions table already exists). If you're setting up a
 -- brand new project instead, just run the updated schema.sql — it already
