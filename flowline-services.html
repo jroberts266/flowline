@@ -27,6 +27,22 @@
   .not-configured-note{ font-size:12px; color:var(--ink-soft); background:#F5F6EF; border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px; margin-bottom:16px; }
   .success-box{ text-align:center; padding:20px 10px; }
   .success-box .check{ font-size:34px; margin-bottom:8px; }
+  .section{ max-width:900px; margin:0 auto; padding:0 20px; }
+  .section h2{ font-size:16px; margin:36px 0 12px; text-align:center; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .chip{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:7px 14px; font-size:12.5px; color:var(--ink-soft); }
+  .steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:760px){ .steps{ grid-template-columns:1fr; } }
+  .step{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 20px; }
+  .step .n{ font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink-soft); letter-spacing:.08em; }
+  .step h3{ font-size:14px; margin:4px 0 6px; }
+  .step p{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:0; }
+  .about-strip{ max-width:640px; margin:32px auto 0; padding:0 20px; text-align:center; font-size:13.5px; color:var(--ink-soft); line-height:1.7; }
+  .faq{ max-width:640px; margin:0 auto; padding:0 20px; }
+  .faq details{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 16px; margin-bottom:8px; }
+  .faq summary{ font-size:13.5px; font-weight:600; cursor:pointer; }
+  .faq details p{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:8px 0 0; }
+  .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 </style>
 </head>
 <body>
@@ -75,62 +91,101 @@
 </nav>
 
 <div class="hero-wrap">
-  <div class="placeholder-banner">
-    <b>Before you publish this:</b> everything below — the three offer cards, pricing, and the description text — is placeholder copy. Replace it with your actual services, rates, and availability before this goes live. This structure (three offers + a short interest form) is just a proven starting layout.
-  </div>
   <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);display:inline-block;margin-bottom:10px;">Work With Us</span>
-  <h1>Need more than a free tool?</h1>
-  <p class="sub">Roberts Shop Improvement's tools are free for a reason — they're often the starting point. If you want hands-on help implementing Lean or Six Sigma in your organization, here's how we can help.</p>
+  <h1>Want a hand putting these to work on your floor?</h1>
+  <p class="sub">The tools here are free, and plenty of shops get what they need from them. If you'd rather have someone alongside your team &mdash; finding where capacity and money are leaking and fixing it &mdash; that's what we do for manufacturers and job shops.</p>
 </div>
 
 <div class="offer-grid">
   <div class="offer-card">
     <span class="emoji">🧭</span>
-    <h3>1:1 / Team Consulting</h3>
-    <p>[Placeholder] We'll work directly with your team on a specific process — mapping the current state, running root-cause analysis, and building an improvement plan together.</p>
+    <h3>Shop Floor Improvement</h3>
+    <p>We walk your process with your team, map how work really flows, and find the delays, rework and hidden workarounds that eat capacity. You leave with a prioritized plan and the first fixes already in place.</p>
   </div>
   <div class="offer-card">
     <span class="emoji">🎓</span>
     <h3>Training &amp; Workshops</h3>
-    <p>[Placeholder] Live or virtual training on Lean fundamentals, Six Sigma methodology, or how to run these tools effectively with your team.</p>
+    <p>Hands-on sessions for supervisors, leads and operators: reading a value stream map, 5S, solving problems with A3 and 5 Whys, and running a daily huddle &mdash; taught with your own parts and processes.</p>
   </div>
   <div class="offer-card">
     <span class="emoji">🛠️</span>
-    <h3>Custom Tools</h3>
-    <p>[Placeholder] Need a Roberts Shop Improvement tool tailored to your industry or a specific internal process? We build custom versions for teams that need more than the free tools offer.</p>
+    <h3>Custom Tools &amp; Boards</h3>
+    <p>A version of these tools set up around your shop: your metrics on an SQDC board, your procedures in one consistent format, your KPIs tracked the way your team already talks about them.</p>
   </div>
 </div>
 
-<div class="form-wrap">
+<div class="section">
+  <h2>Common places to start</h2>
+  <div class="chips">
+    <span class="chip">We can't get product out the door fast enough</span>
+    <span class="chip">Scrap and rework are higher than they should be</span>
+    <span class="chip">Lead times keep slipping</span>
+    <span class="chip">The schedule changes constantly</span>
+    <span class="chip">Lots of inventory, still short the right parts</span>
+    <span class="chip">Procedures live in people's heads</span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step"><div class="n">STEP 1</div><h3>Tell us what's going on</h3><p>Use the form below. A couple of sentences about your shop and your biggest headache is plenty.</p></div>
+    <div class="step"><div class="n">STEP 2</div><h3>Short intro call</h3><p>No charge and no sales deck. We ask questions and tell you honestly whether we can help.</p></div>
+    <div class="step"><div class="n">STEP 3</div><h3>Clear scope and price</h3><p>If it's a fit, you get a written scope and price before any work starts.</p></div>
+  </div>
+</div>
+
+<p class="about-strip">Led by a Lean Six Sigma Black Belt with hands-on experience improving a working production floor &mdash; practical, plain-English help rather than jargon and slide decks.</p>
+
+<div class="section faq">
+  <h2>Questions people ask</h2>
+  <details><summary>Do I have to use the free tools to work with you?</summary><p>No. The tools are there if they help, but you can reach out without using any of them.</p></details>
+  <details><summary>What does it cost?</summary><p>It depends on the size of the project, so we quote after the intro call. The call itself is free.</p></details>
+  <details><summary>Is my information private?</summary><p>Anything you type into the free tools stays in your browser unless you choose to save it to an account. We only see what you send through the form below or share with us during a project.</p></details>
+</div>
+
+<div class="form-wrap" id="contact-form" style="margin-top:36px;">
   <div class="card" id="form-card">
     <h2 style="font-size:15px;margin:0 0 14px;">Tell us what you're working on</h2>
     <div class="not-configured-note" id="not-configured-note" style="display:none;">
-      This form isn't connected to a backend yet — your message won't be saved. Email us directly instead.
+      This form isn't connected to a backend yet &mdash; your message won't be saved. Email us directly instead.
     </div>
     <div class="error-msg" id="err"></div>
 
     <div class="field"><label>What are you interested in?</label>
       <select id="f-interest">
-        <option value="consulting">1:1 / Team Consulting</option>
+        <option value="consulting">Shop Floor Improvement</option>
         <option value="training">Training &amp; Workshops</option>
-        <option value="custom-tools">Custom Tools</option>
+        <option value="custom-tools">Custom Tools &amp; Boards</option>
         <option value="general">Not sure yet</option>
       </select>
     </div>
     <div class="row2">
-      <div class="field"><label>Name</label><input type="text" id="f-name"></div>
-      <div class="field"><label>Company</label><input type="text" id="f-company"></div>
+      <div class="field"><label>Name</label><input type="text" id="f-name" autocomplete="name"></div>
+      <div class="field"><label>Company</label><input type="text" id="f-company" autocomplete="organization"></div>
     </div>
-    <div class="field"><label>Email</label><input type="email" id="f-email"></div>
-    <div class="field"><label>What are you working on? (optional)</label><textarea id="f-message" style="min-height:90px;"></textarea></div>
+    <div class="row2">
+      <div class="field"><label>Email</label><input type="email" id="f-email" autocomplete="email"></div>
+      <div class="field"><label>Team size (optional)</label>
+        <select id="f-size">
+          <option value="">Choose&hellip;</option>
+          <option>Under 10 people</option>
+          <option>10&ndash;50 people</option>
+          <option>51&ndash;200 people</option>
+          <option>200+ people</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>What's the biggest headache right now? (optional)</label><textarea id="f-message" style="min-height:90px;"></textarea></div>
+    <div class="hp" aria-hidden="true"><label>Leave this empty<input type="text" id="f-website" tabindex="-1" autocomplete="off"></label></div>
     <button class="btn-primary" id="btn-submit" style="width:100%;">Send</button>
     <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-top:12px;" id="alt-contact"></div>
   </div>
 
   <div class="card success-box" id="success-card" style="display:none;">
     <div class="check">✅</div>
-    <h2 style="margin:0 0 6px;">Thanks — we'll be in touch.</h2>
-    <p style="font-size:13px;color:var(--ink-soft);margin:0;">We read every message and typically reply within [placeholder: X business days].</p>
+    <h2 style="margin:0 0 6px;">Thanks &mdash; we'll be in touch.</h2>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0;">We read every message and aim to reply within two business days.</p>
   </div>
 </div>
 
@@ -166,10 +221,19 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
   const company = document.getElementById('f-company').value.trim();
   const email = document.getElementById('f-email').value.trim();
   const interest = document.getElementById('f-interest').value;
-  const message = document.getElementById('f-message').value.trim();
+  const size = document.getElementById('f-size').value;
+  const note = document.getElementById('f-message').value.trim();
+  const message = (size ? '[Team size: ' + size + ']\n' : '') + note;
 
-  if (!email){
-    errEl.textContent = 'Please enter your email so we can reach you.';
+  // Honeypot: real visitors never see or fill this field.
+  if (document.getElementById('f-website').value){
+    document.getElementById('form-card').style.display = 'none';
+    document.getElementById('success-card').style.display = 'block';
+    return;
+  }
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    errEl.textContent = 'Please enter a valid email so we can reach you.';
     errEl.style.display = 'block';
     return;
   }
