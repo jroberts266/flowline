@@ -24,6 +24,7 @@
   .alt-contact{ text-align:center; font-size:12.5px; color:var(--ink-soft); margin-top:18px; }
   .alt-contact a{ color:var(--ink); font-weight:600; }
   .error-msg{ background:var(--accent-push-soft); color:var(--accent-push); border-radius:var(--radius); padding:8px 12px; font-size:12.5px; margin-bottom:12px; display:none; }
+  .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
   .not-configured-note{ font-size:12px; color:var(--ink-soft); background:#F5F6EF; border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px; margin-bottom:16px; }
 </style>
 </head>
@@ -76,7 +77,7 @@
   <div class="titles">
     <span class="tag" style="background:#F5F6EF;color:var(--ink-soft);">Support</span>
     <h1>Contact &amp; Feedback</h1>
-    <p>Found a bug, want a feature, or have a billing question? Tell us — no account required.</p>
+    <p>Found a bug, want a feature, or just have a question? Tell us — no account required.</p>
   </div>
 </div>
 
@@ -90,7 +91,7 @@
     <div class="category-row" id="category-row">
       <label><input type="radio" name="category" value="bug" checked><span class="emoji">🐞</span><span>Bug</span></label>
       <label><input type="radio" name="category" value="feature"><span class="emoji">💡</span><span>Feature idea</span></label>
-      <label><input type="radio" name="category" value="billing"><span class="emoji">💳</span><span>Billing</span></label>
+      <label><input type="radio" name="category" value="question"><span class="emoji">❓</span><span>Question</span></label>
       <label><input type="radio" name="category" value="general"><span class="emoji">💬</span><span>General</span></label>
     </div>
 
@@ -100,15 +101,17 @@
     </div>
     <div class="field"><label>Message</label><textarea id="f-message" style="min-height:120px;" placeholder="What's going on?"></textarea></div>
 
+    <div class="hp" aria-hidden="true"><label>Leave this empty<input type="text" id="f-website" tabindex="-1" autocomplete="off"></label></div>
     <button class="btn-primary" id="btn-submit" style="width:100%;">Send</button>
 
     <div class="alt-contact" id="alt-contact"></div>
+    <div class="alt-contact" style="margin-top:8px;">Looking for hands-on help with your shop? <a href="flowline-services.html">See how we can work together</a>.</div>
   </div>
 
   <div class="card success-box" id="success-card" style="display:none;">
     <div class="check">✅</div>
     <h2 style="margin:0 0 8px;">Thanks — got it.</h2>
-    <p style="font-size:13px;color:var(--ink-soft);margin:0;">We read every message. If you left an email, we'll follow up if needed.</p>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0;">We read every message and usually reply within two business days if you left an email.</p>
     <button class="btn-ghost" id="btn-another" style="margin-top:16px;">Send another message</button>
   </div>
 </div>
@@ -147,6 +150,18 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
   const email = document.getElementById('f-email').value.trim();
   const category = document.querySelector('input[name="category"]:checked').value;
   const message = document.getElementById('f-message').value.trim();
+
+  if (document.getElementById('f-website').value){
+    document.getElementById('form-card').style.display = 'none';
+    document.getElementById('success-card').style.display = 'block';
+    return;
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    errEl.textContent = 'That email address doesn\'t look right — fix it or leave it blank.';
+    errEl.style.display = 'block';
+    return;
+  }
 
   if (!message){
     errEl.textContent = 'Please enter a message before sending.';
