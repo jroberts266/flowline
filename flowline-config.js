@@ -24,5 +24,5 @@ window.FLOWLINE_CONFIG = {
 
   // Shown as a fallback "or email us directly" option on the contact page,
   // and used if Supabase isn't configured yet so the form isn't a dead end.
-  SUPPORT_EMAIL: "hello@yourdomain.com"
+  SUPPORT_EMAIL: "joseph.roberts4343@gmail.com"
 };
